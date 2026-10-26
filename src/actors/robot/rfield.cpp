@@ -437,8 +437,6 @@ void FieldItm::setUpLine(QGraphicsLineItem *Line, const QPen &pen)
 	upWallLine->setPen(pen);
 	Scene->addItem(upWallLine);
 	upWallLine->setZValue(1);
-	Scene->update();
-	update();
 }
 
 void FieldItm::setDownLine(QGraphicsLineItem *Line, const QPen &pen)
@@ -447,8 +445,6 @@ void FieldItm::setDownLine(QGraphicsLineItem *Line, const QPen &pen)
 	downWallLine->setPen(pen);
 	Scene->addItem(downWallLine);
 	downWallLine->setZValue(1);
-	Scene->update();
-	update();
 }
 
 void FieldItm::setLeftLine(QGraphicsLineItem *Line, const QPen &pen)
@@ -457,8 +453,6 @@ void FieldItm::setLeftLine(QGraphicsLineItem *Line, const QPen &pen)
 	leftWallLine->setPen(pen);
 	Scene->addItem(leftWallLine);
 	leftWallLine->setZValue(1);
-	Scene->update();
-	update();
 }
 
 void FieldItm::setRightLine(QGraphicsLineItem *Line, const QPen &pen)
@@ -466,10 +460,7 @@ void FieldItm::setRightLine(QGraphicsLineItem *Line, const QPen &pen)
 	rightWallLine = Line;
 	rightWallLine->setPen(pen);
 	Scene->addItem(rightWallLine);
-
 	rightWallLine->setZValue(1);
-	Scene->update();
-	update();
 }
 
 bool FieldItm::hasUpWall()
@@ -943,7 +934,7 @@ void RoboField::setMode(int Mode)
 	sett = RobotModule::robotSettings();
 	QGraphicsView *view = views().first();
 	if (mode == NORMAL_MODE) {
-		if (this->items().indexOf(keyCursor) > -1) {
+		if (keyCursor && keyCursor->scene() == this) {
 			this->removeItem(keyCursor);
 		}
 
@@ -957,7 +948,7 @@ void RoboField::setMode(int Mode)
 		update();
 	}
 	if (mode == NEDIT_MODE) {
-		if (this->items().indexOf(keyCursor) > -1) {
+		if (keyCursor && keyCursor->scene() == this) {
 			this->removeItem(keyCursor);
 		}
 		radSpinBox->hide();
@@ -971,7 +962,7 @@ void RoboField::setMode(int Mode)
 	}
 
 	if (mode == RAD_MODE) {
-		if (this->items().indexOf(keyCursor) > -1) {
+		if (keyCursor && keyCursor->scene() == this) {
 			this->removeItem(keyCursor);
 		}
 
@@ -991,7 +982,7 @@ void RoboField::setMode(int Mode)
 
 	}
 	if (mode == TEMP_MODE) {
-		if (this->items().indexOf(keyCursor) > -1) {
+		if (keyCursor && keyCursor->scene() == this) {
 			this->removeItem(keyCursor);
 		}
 
@@ -1191,100 +1182,101 @@ void RoboField::drawField(uint FieldSize)
 	for (int i = 0; i < rows(); i++) {
 		QList<FieldItm *> *row = &Items[i];
 		for (int j = 0; j < columns(); j++) {
-			int ulx = upLeftCorner(i, j).x(), uly = upLeftCorner(i, j).y();
 			FieldItm *cell = row->at(j);
-
 			cell->setScene(this);
 
-			if (!cell->hasUpSep())
-				cell->setUpLine(
-					new QGraphicsLineItem(
-						ulx, uly,
-						ulx + xd, uly
-					),
-					BortLine
-				);
+			bool isPerimeter = (!cell->hasUpSep() || !cell->hasDownSep() || !cell->hasLeftSep() || !cell->hasRightSep());
+			if (isPerimeter || !cell->emptyCell()) {
+				int ulx = upLeftCorner(i, j).x(), uly = upLeftCorner(i, j).y();
 
-			if (!cell->hasDownSep())
-				cell->setDownLine(
-					new QGraphicsLineItem(
-						ulx, uly + yd,
-						ulx + xd, uly + yd
-					),
-					BortLine
-				);
+				if (!cell->hasUpSep())
+					cell->setUpLine(
+						new QGraphicsLineItem(
+							ulx, uly,
+							ulx + xd, uly
+						),
+						BortLine
+					);
 
+				if (!cell->hasDownSep())
+					cell->setDownLine(
+						new QGraphicsLineItem(
+							ulx, uly + yd,
+							ulx + xd, uly + yd
+						),
+						BortLine
+					);
 
-			if (!cell->hasLeftSep())
-				cell->setLeftLine(
-					new QGraphicsLineItem(
-						ulx, uly,
-						ulx, uly + yd
-					),
-				BortLine);
+				if (!cell->hasLeftSep())
+					cell->setLeftLine(
+						new QGraphicsLineItem(
+							ulx, uly,
+							ulx, uly + yd
+						),
+						BortLine);
 
-			if (!cell->hasRightSep())
-				cell->setRightLine(
-					new QGraphicsLineItem(
-						ulx + xd, uly,
-						ulx + xd, uly + yd
-					),
-					BortLine
-				);
+				if (!cell->hasRightSep())
+					cell->setRightLine(
+						new QGraphicsLineItem(
+							ulx + xd, uly,
+							ulx + xd, uly + yd
+						),
+						BortLine
+					);
 
-			if (cell->hasDownWall()) {
-				cell->setDownLine(
-					new QGraphicsLineItem(
-						ulx, uly + yd,
-						ulx + xd, uly + yd
-					),
-					WallLine
-				);
+				if (cell->hasDownWall()) {
+					cell->setDownLine(
+						new QGraphicsLineItem(
+							ulx, uly + yd,
+							ulx + xd, uly + yd
+						),
+						WallLine
+					);
+				}
 
+				if (cell->hasUpWall()) {
+					cell->setUpLine(
+						new QGraphicsLineItem(
+							ulx, uly,
+							ulx + xd, uly
+						),
+						WallLine
+					);
+				}
+
+				if (cell->hasLeftWall()) {
+					cell->setLeftLine(
+						new QGraphicsLineItem(
+							ulx, uly,
+							ulx, uly + yd
+						),
+						WallLine
+					);
+				}
+
+				if (cell->hasRightWall()) {
+					cell->setRightLine(
+						new QGraphicsLineItem(
+							ulx + xd, uly,
+							ulx + xd, uly + yd
+						),
+						WallLine
+					);
+				}
+
+				if (cell->isColored()) {
+					cell->setColorRect(
+						new QGraphicsRectItem(
+							ulx, uly,
+							xd, yd
+						),
+						FillColor
+					);
+				}
+
+				cell->showCharMark(ulx, uly, fieldSize);
+				cell->setTextColor();
 			}
-
-			if (cell->hasUpWall()) {
-				cell->setUpLine(
-					new QGraphicsLineItem(
-						ulx, uly,
-						ulx + xd, uly
-					),
-					WallLine
-				);
-			}
-
-			if (cell->hasLeftWall()) {
-				cell->setLeftLine(
-					new QGraphicsLineItem(
-						ulx, uly,
-						ulx, uly + yd
-					),
-					WallLine
-				);
-			}
-
-			if (cell->hasRightWall()) {
-				cell->setRightLine(
-					new QGraphicsLineItem(
-						ulx + xd, uly,
-						ulx + xd, uly + yd
-					),
-					WallLine
-				);
-			}
-
-			if (cell->isColored()) {
-				cell->setColorRect(
-					new QGraphicsRectItem(
-						ulx, uly,
-						xd, yd
-					),
-					FillColor
-				);
-			}
-
-			cell->showCharMark(ulx, uly, fieldSize);
-			cell->setTextColor();
 		}
 	}
 
@@ -1427,11 +1419,7 @@ void RoboField::redrawRTFields()
 
 void RoboField::destroyScene()
 {
-	QList<QGraphicsItem *> items = this->items();
-	while (items.count() > 0) {
-		this->removeItem(items.first());
-		items = this->items();
-	}
+	clear();
 	clickCell = QPair<int, int>(-1, -1);
 }
 
@@ -3272,7 +3260,7 @@ void RoboField::showCursorDown(int row, int col)
 {
 	timer->start(500);
 
-	if (this->items().indexOf(keyCursor) > -1) {
+	if (keyCursor && keyCursor->scene() == this) {
 		this->removeItem(keyCursor);
 	}
 

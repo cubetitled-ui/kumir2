@@ -1406,11 +1406,14 @@ void RobotModule::updateRobot()
 
 void RobotModule::getTimer()
 {
-	mutex.lock();
-	field->update();
-	view->update();
-	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-	mutex.unlock();
+	if (field && field->WasEdit()) {
+		mutex.lock();
+		field->update();
+		view->update();
+		qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+		field->dropWasEdit();
+		mutex.unlock();
+	}
 }
 
 } // namespace ActorRobot
