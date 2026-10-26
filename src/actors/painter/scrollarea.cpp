@@ -12,15 +12,15 @@ ScrollArea::ScrollArea(QWidget *parent) :
 
 void ScrollArea::wheelEvent(QWheelEvent *evt)
 {
-    const int delta = evt->delta();
+    const int delta = wheelEventDelta(evt);
     const int degrees = delta / 8;
     const int steps = -1 * degrees / 15;
     if (! (evt->modifiers() & Qt::ControlModifier) ) {
         // Scroll contents
-        QAbstractSlider* slider = evt->orientation() == Qt::Vertical
+        QAbstractSlider* slider = (evt->angleDelta().y() != 0)
                 ? verticalScrollBar()
                 : horizontalScrollBar();
-        if (evt->orientation() == Qt::Vertical && evt->modifiers() & Qt::ShiftModifier) {
+        if ((evt->angleDelta().y() != 0) && evt->modifiers() & Qt::ShiftModifier) {
             slider = horizontalScrollBar();
         }
         if (slider->isVisible()) {

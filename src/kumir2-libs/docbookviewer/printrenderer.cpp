@@ -223,7 +223,7 @@ qreal PrintRenderer::textWidth(const QString &text, const QFont &font)
 	const qreal fontPointSize = font.pointSizeF();
 	const qreal fontPixelSize = fm.height();
 	const qreal metricsDotsPerPoint = fontPixelSize / fontPointSize;
-	const qreal textPixelWidth = fm.width(text);
+	const qreal textPixelWidth = fontMetricsWidth(fm, text);
 	const qreal textPointWidth = textPixelWidth / metricsDotsPerPoint;
 	return pointsToMillimeters(textPointWidth);
 }

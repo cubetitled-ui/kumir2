@@ -1,3 +1,5 @@
+#include <QActionGroup>
+#include <QAction>
 #include "tabwidgetelement.h"
 #include "switchworkspacedialog.h"
 #include "plugin.h"

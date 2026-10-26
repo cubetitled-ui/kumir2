@@ -183,7 +183,7 @@ void DrawView::setNet()
 
 void    DrawView::wheelEvent(QWheelEvent *event)
 {
-	float numDegrees = event->delta() / 8;
+	float numDegrees = wheelEventDelta(event) / 8;
 	qDebug() << "whell:" << numDegrees;
 	//        c_scale=c_scale*0.8;
 	qDebug() << "Scale" << c_scale;

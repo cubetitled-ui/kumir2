@@ -1,3 +1,5 @@
+#include <QActionGroup>
+#include <QAction>
 #include "kumirprogram.h"
 #include "terminal.h"
 #include <kumir2-libs/extensionsystem/pluginmanager.h>

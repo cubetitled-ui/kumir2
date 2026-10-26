@@ -482,7 +482,7 @@ QString generator::renderKeySym(ModelPtr data)
     foreach (ModelPtr  child, data->children()) {
         keysym += child->text();
     }
-    const QStringList keys = keysym.split("+", QString::SkipEmptyParts);
+    const QStringList keys = keysym.split("+", Qt::SkipEmptyParts);
     QStringList parts;
     foreach (const QString & key, keys) {
         QString part = "\\textsc{";

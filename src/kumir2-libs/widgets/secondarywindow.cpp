@@ -7,7 +7,14 @@
 #include <kumir2-libs/extensionsystem/settings.h>
 
 #include <QApplication>
-#include <QDesktopWidget>
+#if QT_VERSION >= 0x060000
+#include <QScreen>
+#include <QWindow>
+#include <QGuiApplication>
+#else
+#include <QScreen>
+#include <QGuiApplication>
+#endif
 
 namespace Widgets
 {
@@ -218,7 +225,12 @@ void SecondaryWindow::restoreState()
 		QSize sz = settings_->value(settingsKey_ + WindowSize, prefSize).toSize();
 		QPoint ps = settings_->value(settingsKey_ + WindowPos, QPoint(-1, -1)).toPoint();
 		if (ps == QPoint(-1, -1) || ps.x() < -sz.width() || ps.y() < -16) {
-			ps = QApplication::desktop()->availableGeometry(topLevelParent_).center();
+#if QT_VERSION >= 0x060000
+			QScreen *screen = topLevelParent_ && topLevelParent_->windowHandle() ? topLevelParent_->windowHandle()->screen() : QGuiApplication::primaryScreen();
+			ps = screen ? screen->availableGeometry().center() : QPoint(100, 100);
+#else
+			ps = QGuiApplication::primaryScreen()->availableGeometry().center();
+#endif
 			ps.rx() -= sz.width() / 2;
 			ps.ry() -= sz.height() / 2;
 		}

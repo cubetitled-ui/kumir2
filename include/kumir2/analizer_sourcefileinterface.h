@@ -5,6 +5,8 @@
 #include <QSet>
 #include <QUrl>
 #include <QTextStream>
+#include <QIODevice>
+#include <kumir2_qt6_compat.h>
 
 namespace Shared
 {
@@ -45,9 +47,9 @@ public /*methods*/:
 		QByteArray buffer;
 		QTextStream stream(&buffer, QIODevice::WriteOnly);
 		if (forceEncoding.length() > 0) {
-			stream.setCodec(forceEncoding.toLatin1().constData());
+			setTextStreamCodec(stream, forceEncoding);
 		} else {
-			stream.setCodec("UTF-8");
+			setTextStreamCodec(stream, "UTF-8");
 			stream.setGenerateByteOrderMark(true);
 		}
 		stream << toString(data);
@@ -62,9 +64,9 @@ public /*methods*/:
 		QByteArray bytesCopy(bytes);
 		QTextStream stream(&bytesCopy);
 		if (forceEncoding.length() > 0) {
-			stream.setCodec(forceEncoding.toLatin1().constData());
+			setTextStreamCodec(stream, forceEncoding);
 		} else {
-			stream.setCodec("UTF-8");
+			setTextStreamCodec(stream, "UTF-8");
 			stream.setAutoDetectUnicode(true);
 		}
 		QString string = stream.readAll();

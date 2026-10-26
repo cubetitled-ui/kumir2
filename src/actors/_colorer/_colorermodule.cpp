@@ -96,7 +96,7 @@ void _ColorerModule::reset()
 static QColor parseColor(const QString &css)
 {
 	QColor result = QColor::Invalid;
-	QString normCSS = css.toLower().remove(QRegExp("\\s"));
+	QString normCSS = css.toLower().remove(QRegularExpression("\\s"));
 	QRegExp rxCSS("(rgb|rgba|cmyk|cmyka|hsl|hsla|hsv|hsva)\\((.*)\\)");
 	QMap<QString, QString> ruNames;
 	ruNames[QString::fromUtf8("белый")] = "white";

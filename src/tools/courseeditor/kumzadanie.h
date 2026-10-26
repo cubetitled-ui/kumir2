@@ -22,7 +22,7 @@ public:
 
 	QString field(QString ispName, int fieldNo)
 	{
-		QList<QString> ispFields = fields.values(ispName);
+		QList<QString> ispFields = qmapValues(fields, ispName);
 		if (fieldNo >= ispFields.count()) {
 			return "";
 		}
@@ -31,14 +31,14 @@ public:
 
 	int fieldsCount(QString ispName)
 	{
-		QList<QString> ispFields = fields.values(ispName);
+		QList<QString> ispFields = qmapValues(fields, ispName);
 
 		return ispFields.count();
 	}
 
 	QStringList isps; //исполнители используемые в задание
 	QStringList Scripts; //скрипты используемые в задание
-	QMap<QString, QString> fields; //Обстановки для каждого исполнителя fields[исп,обст]
+	QMultiMap<QString, QString> fields; //Обстановки для каждого исполнителя fields[исп,обст]
 };
 
 #endif // KUMZADANIE_H

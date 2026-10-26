@@ -5,12 +5,14 @@ if(NOT DEFINED USE_QT)
 	set(USE_QT 4)
 endif(NOT DEFINED USE_QT)
 
-if(${USE_QT} GREATER 4)
-	# Find Qt5
+if(${USE_QT} EQUAL 6)
+	find_package(Qt6 COMPONENTS Core Widgets Core5Compat REQUIRED)
+	set(QT_LIBRARIES Qt6::Core Qt6::Widgets Qt6::Core5Compat)
+elseif(${USE_QT} EQUAL 5)
 	find_package(Qt5 5.3.0 COMPONENTS Core Widgets REQUIRED)
 	include_directories(${Qt5Core_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} BEFORE)
 	set(QT_LIBRARIES ${Qt5Core_LIBRARIES} ${Qt5Widgets_LIBRARIES})
-	()
+else()
 	# Find Qt4
 	set(QT_USE_QTMAIN 1)
 	find_package(Qt4 4.7.0 COMPONENTS QtCore QtGui REQUIRED)
@@ -59,7 +61,9 @@ set(MOC_HEADERS
 	syntaxchecksettingspage.h
 )
 
-if(${USE_QT} GREATER 4)
+if(${USE_QT} EQUAL 6)
+	qt6_wrap_cpp(MOC_SOURCES ${MOC_HEADERS})
+elseif(${USE_QT} EQUAL 5)
 	qt5_wrap_cpp(MOC_SOURCES ${MOC_HEADERS})
 else()
 	qt4_wrap_cpp(MOC_SOURCES ${MOC_HEADERS})

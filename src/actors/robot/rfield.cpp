@@ -55,7 +55,7 @@ FieldItm::FieldItm(QGraphicsItem *par, QGraphicsScene *scene)
 	font.setStyleHint(QFont::SansSerif);
 	radiation = 0;
 	temperature = 0;
-	font.setWeight(2);
+	font.setWeight(QFont::Weight::ExtraLight);
 	TextColor = QColor(sett->value("Robot/TextColor", "#FFFFFF").toString());
 	upCharFld = NULL;
 	downCharFld = NULL;

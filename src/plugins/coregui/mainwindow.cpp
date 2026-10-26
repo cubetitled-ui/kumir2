@@ -1,3 +1,5 @@
+#include <QActionGroup>
+#include <QAction>
 #include "mainwindow.h"
 #include "plugin.h"
 #include "terminal.h"
@@ -28,7 +30,8 @@
 #include <QSharedPointer>
 #include <QMenuBar>
 #include <QFileDialog>
-#include <QDesktopWidget>
+#include <QScreen>
+#include <QGuiApplication>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QMimeData>
@@ -1729,7 +1732,7 @@ void MainWindow::loadSettings(const QStringList &keys)
 			if (r.topLeft() != QPoint(-1, -1)) {
 				ps = r.topLeft();
 			} else {
-				const QSize screenSize = QApplication::desktop()->availableGeometry().size();
+				const QSize screenSize = QGuiApplication::primaryScreen()->availableGeometry().size();
 				int x = screenSize.width() - r.width();
 				int y = screenSize.height() - r.height();
 				x /= 2;
@@ -1769,7 +1772,7 @@ void MainWindow::loadSettings(const QStringList &keys)
 
 void MainWindow::setFirstTimeWindowLayout()
 {
-	const QRect workspaceSize = QApplication::desktop()->availableGeometry();
+	const QRect workspaceSize = QGuiApplication::primaryScreen()->availableGeometry();
 	bool maximizeWindow =
 		workspaceSize.width() <= 1280 || workspaceSize.height() <= 700;
 	if (maximizeWindow) {

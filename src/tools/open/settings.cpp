@@ -9,7 +9,9 @@ Settings &Settings::get()
 
 Settings::Settings(const QString &dir, const QString &file) : q_(dir, file)
 {
+#if QT_VERSION < 0x060000
 	q_.setIniCodec("UTF-8");
+#endif
 }
 
 

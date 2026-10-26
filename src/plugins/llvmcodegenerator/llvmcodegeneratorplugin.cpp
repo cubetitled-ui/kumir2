@@ -521,7 +521,7 @@ QByteArray LLVMCodeGeneratorPlugin::runExternalToolsToGenerateExecutable(const Q
 
 void LLVMCodeGeneratorPlugin::fixMultipleTypeDeclarations(QByteArray &data)
 {
-    QStringList lines = QString::fromLatin1(data).split('\n', QString::KeepEmptyParts);
+    QStringList lines = QString::fromLatin1(data).split('\n', Qt::KeepEmptyParts);
     QRegExp rxTypeDecl("%((struct|union)\\.__kumir_(\\S+))\\s=\\stype.+");
     QSet<QString> kumTypes;
     for (int i=0; i<lines.size(); i++) {

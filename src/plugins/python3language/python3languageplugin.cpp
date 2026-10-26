@@ -194,7 +194,7 @@ bool Python3LanguagePlugin::loadProgram(const RunnableProgram & program)
 QString Python3LanguagePlugin::extractFunction(const QString &source, const QString &funcName)
 {
     QString result;
-    QStringList sourceLines = source.split("\n", QString::KeepEmptyParts);
+    QStringList sourceLines = source.split("\n", Qt::KeepEmptyParts);
     int lineStart = -1;
     int lineCount = 0;
     for (int i=0; i<sourceLines.size(); i++) {

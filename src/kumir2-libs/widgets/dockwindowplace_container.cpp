@@ -84,7 +84,7 @@ void DockWindowPlaceContainer::paintWindowFrame()
 void DockWindowPlaceContainer::setupWidgetsAppearance()
 {
 	const QPalette &pal = palette();
-	const QString fgColor = pal.color(QPalette::Foreground).name();
+	const QString fgColor = pal.color(QPalette::WindowText).name();
 
 	static const QSize buttonSize = QSize(24, 16);
 	static const int titleHeight = 28;
@@ -135,7 +135,7 @@ void DockWindowPlaceContainer::setupWidgetsAppearance()
 QIcon DockWindowPlaceContainer::createIconMathcingColorTheme(const QString &fileName) const
 {
 	const QPalette &pal = palette();
-	const QColor fgColor = pal.color(QPalette::Foreground).toHsv();
+	const QColor fgColor = pal.color(QPalette::WindowText).toHsv();
 	const bool invertedTheme = fgColor.value() > 127;
 	const QImage sourceImage = QImage(fileName);
 	QImage target(sourceImage.size(), QImage::Format_ARGB32);

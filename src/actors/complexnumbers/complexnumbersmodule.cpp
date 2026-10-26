@@ -124,7 +124,7 @@ Complex ComplexNumbersModule::runOperatorASSIGN(const qreal x)
 Complex ComplexNumbersModule::runOperatorINPUT(const QString& x, bool& ok)
 {
 	static const QRegExp rxPlusMinus("[+-]");
-	int p = x.indexOf(rxPlusMinus);
+	int p = rxPlusMinus.indexIn(x);
 	QString re = "0.0", im = "0.0";
 	if (p==-1) {
 		if (x.trimmed().endsWith(QChar('i'), Qt::CaseInsensitive))

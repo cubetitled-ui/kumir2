@@ -52,7 +52,7 @@ bool ErrorMessages::loadMessages(const QByteArray &pluginName)
 
 	if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
 		QTextStream ts(&f);
-		ts.setCodec("UTF-8");
+		setTextStreamCodec(ts, "UTF-8");
 		ts.setAutoDetectUnicode(true);
 		QStringList languages = readCSVRow(ts.readLine()).mid(1);
 		QList<Context> contexts;
@@ -93,6 +93,29 @@ QString ErrorMessages::message(const QByteArray &pluginName
 	, const QString &key)
 {
 	Context context(pluginName, language);
+#if QT_VERSION >= 0x060000
+	static const QRegularExpression arg1("\\\\1=\\{([^}]*)\\}");
+	static const QRegularExpression arg2("\\\\2=\\{([^}]*)\\}");
+	static const QRegularExpression arg3("\\\\3=\\{([^}]*)\\}");
+	QString k = key;
+	QStringList arguments;
+	QString result;
+	QRegularExpressionMatch m = arg1.match(k);
+	if (m.hasMatch()) {
+		arguments << m.captured(1);
+		k.replace(m.capturedStart(0), m.capturedLength(0), "%1");
+	}
+	m = arg2.match(k);
+	if (m.hasMatch()) {
+		arguments << m.captured(1);
+		k.replace(m.capturedStart(0), m.capturedLength(0), "%2");
+	}
+	m = arg3.match(k);
+	if (m.hasMatch()) {
+		arguments << m.captured(1);
+		k.replace(m.capturedStart(0), m.capturedLength(0), "%3");
+	}
+#else
 	static QRegExp arg1("\\\\1=\\{(\\S*)\\}");
 	arg1.setMinimal(true);
 	static QRegExp arg2("\\\\2=\\{(\\S*)\\}");
@@ -117,6 +140,7 @@ QString ErrorMessages::message(const QByteArray &pluginName
 		arguments << arg3.cap(1);
 		k.replace(p, arg3.matchedLength(), "%3");
 	}
+#endif
 	if (database.contains(context) && database[context].contains(k)) {
 		result = database[context][k];
 	} else {

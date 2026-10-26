@@ -99,13 +99,13 @@ QLayoutItem *FlowLayout::takeAt(int index)
 	if (index >= 0 && index < itemList.size()) {
 		return itemList.takeAt(index);
 	} else {
-		return 0;
+		return {};
 	}
 }
 
 Qt::Orientations FlowLayout::expandingDirections() const
 {
-	return 0;
+	return {};
 }
 
 bool FlowLayout::hasHeightForWidth() const
@@ -138,7 +138,11 @@ QSize FlowLayout::minimumSize() const
 		size = size.expandedTo(item->minimumSize());
 	}
 
+	#if QT_VERSION >= 0x060000
+	size += QSize(contentsMargins().left() + contentsMargins().right(), contentsMargins().top() + contentsMargins().bottom());
+#else
 	size += QSize(2 * margin(), 2 * margin());
+#endif
 	return size;
 }
 //! [8]

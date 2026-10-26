@@ -73,7 +73,11 @@ public:
 		const QString &importName
 	) const = 0;
 	virtual QString suggestFileName() const = 0;
+	#if QT_VERSION >= 0x060000
+	virtual QRegularExpression lineCommentStartLexemPattern() const = 0;
+#else
 	virtual QRegExp lineCommentStartLexemPattern() const = 0;
+#endif
 
 	virtual void connectSignalImportsChanged(
 		QObject *receiver,

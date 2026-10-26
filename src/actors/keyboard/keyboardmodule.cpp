@@ -85,7 +85,10 @@ KeyboardModule::KeyboardModule(ExtensionSystem::KPlugin *parent)
 /* public slot */ void KeyboardModule::reset()
 {
 	runClearKeyBuffer();
-	// Register event filter
+	if (qApp) {
+		qApp->installEventFilter(this);
+	}
+	// Register event filter for all widgets as well
 	QWidgetList widgets = QApplication::allWidgets();
 	Q_FOREACH (QWidget *w, widgets) {
 		w->installEventFilter(this);
@@ -99,6 +102,9 @@ void KeyboardModule::terminateEvaluation()
 
 void KeyboardModule::finalizeRun()
 {
+	if (qApp) {
+		qApp->removeEventFilter(this);
+	}
 	// Deregister event filter
 	QWidgetList widgets = QApplication::allWidgets();
 	Q_FOREACH (QWidget *w, widgets) {

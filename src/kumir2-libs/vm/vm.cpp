@@ -6,6 +6,12 @@ const int MAX_RECURSION_SIZE = 4000;
 
 namespace VM
 {
+static inline std::vector<VM::Variable>* safeGetGlobals(VM::ModuleContext &mc, size_t modId) {
+	if (modId >= mc.globals.size()) {
+		mc.globals.resize(modId + 1);
+	}
+	return &(mc.globals[modId]);
+}
 
 uint8_t KumirVM::returnCode() const
 {
@@ -636,8 +642,7 @@ void KumirVM::reset()
 				contextsStack_.push(initContext);
 				currentConstants_ =
 					&(moduleContexts_[moduleContextNo].constants);
-				currentGlobals_ =
-					&(moduleContexts_[moduleContextNo].globals[e.module]);
+				currentGlobals_ = safeGetGlobals(moduleContexts_[moduleContextNo], e.module);
 			}
 		}
 	}
@@ -933,8 +938,7 @@ void KumirVM::do_call(uint8_t mod, uint16_t alg)
 			nextCallInto_ = false;
 			valuesStack_.pop(); // current implementation doesn't requere args count
 			currentLocals_ = &(contextsStack_.top().locals);
-			currentGlobals_ =
-				&(moduleContexts_[c.moduleContextNo].globals[c.moduleId]);
+			currentGlobals_ = safeGetGlobals(moduleContexts_[c.moduleContextNo], c.moduleId);
 			currentConstants_ =
 				&(moduleContexts_[c.moduleContextNo].constants);
 			if (stacksMutex_) {
@@ -963,8 +967,7 @@ void KumirVM::do_call(uint8_t mod, uint16_t alg)
 				c.moduleContextNo = reference.moduleContext;
 				contextsStack_.push(c);
 				currentLocals_ = &(contextsStack_.top().locals);
-				currentGlobals_ =
-					&(moduleContexts_[c.moduleContextNo].globals[c.moduleId]);
+				currentGlobals_ = safeGetGlobals(moduleContexts_[c.moduleContextNo], c.moduleId);
 				currentConstants_ =
 					&(moduleContexts_[reference.moduleContext].constants);
 				nextCallInto_ = false;
@@ -2675,8 +2678,7 @@ void KumirVM::do_ret()
 	}
 	if (contextsStack_.size() > 0) {
 		currentLocals_ = &(contextsStack_.top().locals);
-		currentGlobals_ =
-			&(moduleContexts_[contextsStack_.top().moduleContextNo].globals[contextsStack_.top().moduleId]);
+		currentGlobals_ = safeGetGlobals(moduleContexts_[contextsStack_.top().moduleContextNo], contextsStack_.top().moduleId);
 		currentConstants_ =
 			&(moduleContexts_[contextsStack_.top().moduleContextNo].constants);
 	}
@@ -3242,11 +3244,13 @@ KumirVM::getMainModuleGlobals() const
 	const std::vector<Variable> *result = nullptr;
 	const GlobalsMap &allGlobals = context.globals;
 	for (size_t i = allGlobals.size(); i-- > 0;) {
-		const Kumir::String &currentModuleName = context.moduleNames[i];
-		if (currentModuleName.length() == 0) {
-			const std::vector<Variable> &moduleGlobals = allGlobals.at(i);
-			result = &moduleGlobals;
-			break;
+		if (i < context.moduleNames.size()) {
+			const Kumir::String &currentModuleName = context.moduleNames[i];
+			if (currentModuleName.length() == 0) {
+				const std::vector<Variable> &moduleGlobals = allGlobals.at(i);
+				result = &moduleGlobals;
+				break;
+			}
 		}
 	}
 	return result;

@@ -51,7 +51,9 @@ int PainterNewImageDialog::exec()
 	QSettings *s = NULL;
 	if (QFile::exists(directory_ini)) {
 		s = new QSettings(directory_ini, QSettings::IniFormat);
+#if QT_VERSION < 0x060000
 		s->setIniCodec("UTF-8");
+#endif
 	}
 	sl_templateNames.clear();
 	foreach (const QString &fileName, sl_templateFiles) {

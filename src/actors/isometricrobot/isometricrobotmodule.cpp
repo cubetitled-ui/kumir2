@@ -130,7 +130,7 @@ void IsometricRobotModule::reset()
 void IsometricRobotModule::loadActorData(QIODevice *source)
 {
 	QTextStream ts(source);
-	ts.setCodec("UTF-8");
+	setTextStreamCodec(ts, "UTF-8");
 	ts.setAutoDetectUnicode(true);
 	const QString data = ts.readAll();
 	Schema::Environment env;

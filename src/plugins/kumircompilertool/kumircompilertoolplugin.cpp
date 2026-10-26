@@ -174,6 +174,7 @@ void KumirCompilerToolPlugin::start()
 			ps |= QFile::ExeGroup | QFile::ExeOwner | QFile::ExeOther;
 			QFile::setPermissions(outFileName, ps);
 		}
+		delete analizer;
 		qApp->setProperty("returnCode", errors.isEmpty() ? 0 : 1);
 	} else {
 		const QString errorMessage = tr("Can't open file %1").arg(QDir::toNativeSeparators(filename));

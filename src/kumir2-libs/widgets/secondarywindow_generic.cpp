@@ -7,7 +7,14 @@
 #include <QPainter>
 #include <QPalette>
 #include <QApplication>
-#include <QDesktopWidget>
+#if QT_VERSION >= 0x060000
+#include <QScreen>
+#include <QWindow>
+#include <QGuiApplication>
+#else
+#include <QScreen>
+#include <QGuiApplication>
+#endif
 #include <QMouseEvent>
 #include <QHoverEvent>
 #include <QPushButton>
@@ -632,7 +639,6 @@ void SecondaryWindowGenericImplementation::notifyOnDocked()
 void SecondaryWindowGenericImplementation::handleResizeRequest(const QSize &newSize)
 {
 	if (centralWidget_) {
-		int screenNumber = QApplication::desktop()->screenNumber(this);
 		centralWidget_->resize(newSize);
 		QSize sz = newSize;
 		sz.rwidth() += layout()->contentsMargins().left() +
@@ -643,7 +649,13 @@ void SecondaryWindowGenericImplementation::handleResizeRequest(const QSize &newS
 			titleBox_->height();
 		resize(sz);
 
-		const QRect screen = QApplication::desktop()->screenGeometry(screenNumber);
+#if QT_VERSION >= 0x060000
+		QScreen *scr = windowHandle() ? windowHandle()->screen() : QGuiApplication::primaryScreen();
+		const QRect screen = scr ? scr->geometry() : QRect(0, 0, 1024, 768);
+#else
+		int screenNumber = QApplication::desktop()->screenNumber(this);
+		const QRect screen = QGuiApplication::primaryScreen()->geometry();
+#endif
 		int dx = qMax(0, rect().right() - screen.right());
 		int dy = qMax(0, rect().bottom() - screen.bottom());
 		if (dx > 0 || dy > 0) {

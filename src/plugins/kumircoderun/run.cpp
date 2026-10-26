@@ -46,6 +46,15 @@ Run::Run(QObject *parent) : QThread(parent)
 
 }
 
+Run::~Run()
+{
+	delete stoppingMutex_;
+	delete stepDoneMutex_;
+	delete algDoneMutex_;
+	delete interactDoneMutex_;
+	delete breakHitMutex_;
+}
+
 void Run::lockVMMutex()
 {
 	VMMutex_->lock();

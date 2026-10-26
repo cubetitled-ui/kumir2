@@ -38,7 +38,7 @@ SourceFileInterface::Data PyFileHandler::fromString(const QString &string) const
     SourceFileInterface::Data result;
     result.hasHiddenText = false;
     QString * currentBlock = &result.visibleText;
-    QStringList lines = string.split("\n", QString::KeepEmptyParts);
+    QStringList lines = string.split("\n", Qt::KeepEmptyParts);
     Q_FOREACH(const QString & sourceLine, lines) {
 
         QString line = sourceLine;
@@ -57,8 +57,8 @@ SourceFileInterface::Data PyFileHandler::fromString(const QString &string) const
         else if (line.startsWith(ProtectedLines)) {
             int rangeStart = ProtectedLines.length();
             int rangeEnd = line.lastIndexOf("-*-");
-            QStringList numbers = line.mid(rangeStart, rangeEnd-rangeStart).split(" ", QString::SkipEmptyParts);
-            QStringList visibleLines = result.visibleText.split("\n", QString::KeepEmptyParts);
+            QStringList numbers = line.mid(rangeStart, rangeEnd-rangeStart).split(" ", Qt::SkipEmptyParts);
+            QStringList visibleLines = result.visibleText.split("\n", Qt::KeepEmptyParts);
             Q_FOREACH(const QString & number, numbers) {
                 int value = number.toInt();
                 if (value < visibleLines.size())

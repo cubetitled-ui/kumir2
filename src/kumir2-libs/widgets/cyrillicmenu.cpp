@@ -25,7 +25,9 @@ void CyrillicMenu::paintEvent(QPaintEvent *event)
 	menuOpt.state = QStyle::State_None;
 	menuOpt.checkType = QStyleOptionMenuItem::NotCheckable;
 	menuOpt.maxIconWidth = 0;
+	#if QT_VERSION < 0x060000
 	menuOpt.tabWidth = 0;
+#endif
 	style()->drawPrimitive(QStyle::PE_PanelMenu, &menuOpt, &p, this);
 	for (int i = 0; i < actions().count(); ++i) {
 		QAction *action = actions().at(i);

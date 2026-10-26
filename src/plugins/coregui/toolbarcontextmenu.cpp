@@ -1,3 +1,4 @@
+#include <QWindow>
 #include "toolbarcontextmenu.h"
 #include <kumir2-libs/widgets/actionproxy.h>
 
@@ -8,7 +9,13 @@
 #include <QPainter>
 #include <QStyleOptionMenuItem>
 #include <QApplication>
-#include <QDesktopWidget>
+#if QT_VERSION >= 0x060000
+#include <QScreen>
+#include <QGuiApplication>
+#else
+#include <QScreen>
+#include <QGuiApplication>
+#endif
 #include <QMenuBar>
 #include <QToolBar>
 #include <QGridLayout>
@@ -281,7 +288,9 @@ void ToolbarContextMenu::paintEvent(QPaintEvent *event)
 	menuOpt.state = QStyle::State_None;
 	menuOpt.checkType = QStyleOptionMenuItem::NotCheckable;
 	menuOpt.maxIconWidth = 0;
+	#if QT_VERSION < 0x060000
 	menuOpt.tabWidth = 0;
+#endif
 	style()->drawPrimitive(QStyle::PE_PanelMenu, &menuOpt, &p, this);
 	QWidget::paintEvent(event);
 	const int fw = style()->pixelMetric(QStyle::PM_MenuPanelWidth, 0, this);
@@ -340,8 +349,13 @@ void ToolbarContextMenu::showMe()
 	}
 
 	QRect contextRect(position, size());
+#if QT_VERSION >= 0x060000
+	QScreen *scr = windowHandle() ? windowHandle()->screen() : QGuiApplication::primaryScreen();
+	QRect screenRect = scr ? scr->availableGeometry() : QRect(0, 0, 1024, 768);
+#else
 	QDesktopWidget *screen = qApp->desktop();
 	QRect screenRect = screen->availableGeometry(this);
+#endif
 	if (contextRect.right() > screenRect.right()) {
 		contextRect.moveRight(screenRect.right());
 	}

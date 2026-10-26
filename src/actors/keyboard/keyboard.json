@@ -1,6 +1,6 @@
 {
     "name": { "ascii": "Keyboard", "ru_RU": "Клавиатура" },
-    "gui": {},
+    "gui": { "optional": true },
     "types": [
         {
             "name": { "ascii": "keycode", "ru_RU": "сканкод" },

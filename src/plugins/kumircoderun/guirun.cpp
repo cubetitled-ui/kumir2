@@ -276,14 +276,12 @@ void OutputFunctor::operator()(
 	// Fix fake 152 symbol used by CP1251
 	data = data.replace(QChar(152), QChar(' '));
 	emit requestOutput(data);
-	Util::SleepFunctions::msleep(10);
 }
 
 void OutputFunctor::writeRawString(const String &s)
 {
 	QString data = QString::fromStdWString(s);
 	emit requestOutput(data);
-	Util::SleepFunctions::msleep(10);
 }
 
 void SimulatedOutputBuffer::writeRawString(const String &s)

@@ -1,3 +1,5 @@
 # Disable components for Python, which are
 # in separate branch
 llvmcodegenerator
+ActorIsometricRobot
+isometricrobot

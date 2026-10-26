@@ -48,7 +48,7 @@ set(CMAKE_CXX_EXTENSIONS "OFF")
 set(CMAKE_CXX_STANDARD "11")
 
 # Compile flags
-set(KUMIR2_CXXFLAGS "-fno-exceptions -fPIC -Wall -W -Wno-deprecated-declarations -Wno-unused-parameter")
+set(KUMIR2_CXXFLAGS "-fno-exceptions -fPIC -include /home/cune/kumir2/include/kumir2_qt6_compat.h -Wall -W -Wno-deprecated-declarations -Wno-unused-parameter")
 set(KUMIR2_CXXFLAGS_Release "-O2 -UNDEBUG")
 set(KUMIR2_CXXFLAGS_RelWithDebInfo "-g1 -O2 -UNDEBUG -UQT_NO_DEBUG")
 set(KUMIR2_CXXFLAGS_Debug "-g -O1")

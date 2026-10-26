@@ -27,6 +27,7 @@ public:
 	}
 
 	RobotModule(ExtensionSystem::KPlugin *parent);
+	~RobotModule();
 
 	QSize minimumSize() const;
 

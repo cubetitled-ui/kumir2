@@ -271,7 +271,7 @@ void SandboxWidget::createWelcomeFrame()
     QFile greeting(welcomeFileName);
     if (greeting.open(QIODevice::ReadOnly|QIODevice::Text)) {
         QTextStream stream(&greeting);
-        stream.setCodec("UTF-8");
+        setTextStreamCodec(stream, "UTF-8");
         stream.setAutoDetectUnicode(true);
         const QString htmlData = stream.readAll();
         greeting.close();

@@ -357,7 +357,7 @@ void Term::input(const QString &format)
 	}
 	OneSession *lastSession = sessions_.last();
 
-	inputFormats_ = format.split(";", QString::SkipEmptyParts);
+	inputFormats_ = format.split(";", Qt::SkipEmptyParts);
 	inputValues_.clear();
 
 	lastSession->input(format);
@@ -464,7 +464,7 @@ void Term::saveText(const QString &suggestedFileName, const QString &text)
 		QFile f(fileName);
 		if (f.open(QIODevice::WriteOnly)) {
 			QTextStream ts(&f);
-			ts.setCodec("UTF-8");
+			setTextStreamCodec(ts, "UTF-8");
 			ts.setGenerateByteOrderMark(true);
 			ts << text;
 			f.close();

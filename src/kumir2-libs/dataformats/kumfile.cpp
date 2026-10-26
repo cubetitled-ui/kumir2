@@ -1,6 +1,8 @@
 #include "kumfile.h"
 #include <kumir2/analizer_sourcefileinterface.h>
+#if QT_VERSION < 0x060000
 #include <QRegExp>
+#endif
 #include <QStringList>
 #include <QDebug>
 
@@ -17,7 +19,11 @@ Shared::Analizer::SFData KumFile::insertTeacherMark(
 	Shared::Analizer::SFData &data
 ) { //Inserts |#%% if needed.
 
+	#if QT_VERSION >= 0x060000
+	static const QRegularExpression teacherMark("(^|\\n)\\|#%%");
+#else
 	static const QRegExp teacherMark("(^|\\n)\\|#%%");
+#endif
 	if (data.visibleText.indexOf(teacherMark) > -1) {
 		//qDebug()<<" TM POS:"<<data.visibleText.indexOf("\n|#%%");
 		return data;
@@ -27,7 +33,11 @@ Shared::Analizer::SFData KumFile::insertTeacherMark(
 		return data;
 	};
 	// static const QRegExp speclAlg(QString::fromUtf8("^\\s*алг\\s*(\\S\\S\\S)?\\s+@"));
+	#if QT_VERSION >= 0x060000
+	static const QRegularExpression speclAlg(QString::fromUtf8("^|\\s*алг\\s*(\\S\\S\\S)?\\s*@"));
+#else
 	static const QRegExp speclAlg(QString::fromUtf8("^|\\s*алг\\s*(\\S\\S\\S)?\\s*@"));
+#endif
 
 	int pos = data.hiddenText.indexOf(speclAlg);
 	qDebug() << data.hiddenText;
@@ -39,7 +49,7 @@ Shared::Analizer::SFData KumFile::insertTeacherMark(
 	pos = data.visibleText.indexOf(speclAlg);
 	if (pos > 1) {
 		data.visibleText.insert(pos, "\n|#%%\n");
-		QStringList strings = data.visibleText.split("\n", QString::KeepEmptyParts);
+		QStringList strings = data.visibleText.split("\n", Qt::KeepEmptyParts);
 		for (int i = 0; i < strings.count(); i++) {
 			if (strings.at(i).startsWith("|#%%")) {
 				data.protectedLineNumbers.insert(i);

@@ -44,8 +44,10 @@ void MainWindowTask::setup()
 	ui->treeView->setContextMenuPolicy(Qt::CustomContextMenu);
 	settings = new QSettings("NIISI RAS", "Kumir 1.9");
 	setWindowIcon(QIcon(":/taskEdit.ico"));
-	settings->setIniCodec("UTF-8");
-	lastFiles = settings->value("RescentFiles").toStringList();
+	#if QT_VERSION < 0x060000
+settings->setIniCodec("UTF-8");
+
+#endif	lastFiles = settings->value("RescentFiles").toStringList();
 	customMenu.hide();
 	connect(ui->loadCurs, SIGNAL(triggered()), this, SLOT(loadCourse()));
 	connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveCourse()));
@@ -746,7 +748,7 @@ QString MainWindowTask::loadTestAlg(QString file_name)
 		return "";
 	};
 	QTextStream ts(&file);
-	ts.setCodec("UTF-16LE");
+	setTextStreamCodec(ts, "UTF-16LE");
 	QString testalg = ts.readAll();
 	file.close();
 

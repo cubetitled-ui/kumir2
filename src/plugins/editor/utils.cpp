@@ -7,7 +7,7 @@
 #   include <windows.h>
 #endif
 
-#if defined(Q_WS_X11) || defined(Q_OS_LINUX)
+#if (defined(Q_WS_X11) || defined(Q_OS_LINUX)) && QT_VERSION < 0x060000
 #   include <QX11Info>
 #   include <X11/XKBlib.h>
 #   include <X11/Xatom.h>
@@ -28,14 +28,13 @@ bool Utils::isRussianLayout()
 	// Qt4 implementation
 	QString keybLang = QApplication::keyboardInputLocale().name();
 	result = keybLang.contains("ru");
-#else
+#elif QT_VERSION < 0x060000
 	// Qt5 implementation
 	QInputMethod *inputMethod = QApplication::inputMethod();
 	QString keybLang = inputMethod->locale().name();
 	result = keybLang.contains("ru");
 	Display *d = QX11Info::display();
-	if (d && !result) {  // Might be variant of main input method
-		// solution found at: http://www.linux.org.ru/forum/development/12852504
+	if (d && !result) {
 		XkbStateRec xkbState;
 		XkbGetState(d, XkbUseCoreKbd, &xkbState);
 		Atom real_prop_type;
@@ -56,6 +55,13 @@ bool Utils::isRussianLayout()
 		keybLang = names[xkbState.group];
 		result = keybLang.contains("ru");
 	}
+#else
+	// Qt6 implementation
+	QInputMethod *inputMethod = QApplication::inputMethod();
+	if (inputMethod) {
+		QString keybLang = inputMethod->locale().name();
+		result = keybLang.contains("ru");
+	}
 #endif
 #endif // X11
 
@@ -72,13 +78,16 @@ bool Utils::isRussianLayout()
 bool Utils::isCapsLock()
 {
 	bool result = false;
-#if defined(Q_WS_X11) || defined(Q_OS_LINUX)
+#if (defined(Q_WS_X11) || defined(Q_OS_LINUX)) && QT_VERSION < 0x060000
 	Display *d = QX11Info::display();
 	if (d) {
 		unsigned n;
 		XkbGetIndicatorState(d, XkbUseCoreKbd, &n);
 		result = (n & 0x01) == 1;
 	}
+#elif (defined(Q_WS_X11) || defined(Q_OS_LINUX)) && QT_VERSION >= 0x060000
+	// Under Qt6 Wayland/X11
+	result = false;
 #endif
 #ifdef Q_OS_WIN32
 	result = GetKeyState(VK_CAPITAL) == 1;

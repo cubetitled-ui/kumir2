@@ -53,7 +53,7 @@ void ApplicationManager::scanForApplications(
 		QFile f(appsDir.absoluteFilePath(fileName));
 		if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
 			QTextStream ts(&f);
-			ts.setCodec("UTF-8");
+			setTextStreamCodec(ts, "UTF-8");
 			QStringList lines = ts.readAll().split("\n");
 			f.close();
 			ApplicationPrivate app;

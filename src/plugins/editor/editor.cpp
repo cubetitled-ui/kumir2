@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "suggestionswindow.h"
 #include "editor.h"
 #include "editorplane.h"
@@ -128,7 +129,7 @@ void EditorInstance::loadDocument(QIODevice *device, const QString &fileNameSuff
 			codec = QTextCodec::codecForLocale();
 		}
 		QTextStream ts(bytes);
-		ts.setCodec(codec);
+		setTextStreamCodec(ts, codec);
 		ts.setAutoDetectUnicode(true);
 		data.hasHiddenText = false;
 		data.visibleText = ts.readAll();
@@ -330,7 +331,7 @@ void EditorInstance::loadMacros()
 		PluginManager::instance()->loadedConstPlugins("Actor*");
 
 	foreach (const KPlugin *plugin, actorPlugins) {
-		ActorInterface *actor = qobject_cast<ActorInterface *>(plugin);
+		const ActorInterface *actor = qobject_cast<const ActorInterface *>(plugin);
 		QString canonicalName = actorCanonicalName<QString>(actor->asciiModuleName());
 		canonicalName.remove(" ");
 		const QString actorMacrosFileName = plugin_->myResourcesDir().absoluteFilePath(
@@ -351,7 +352,7 @@ void EditorInstance::loadMacros()
 		std::deque<QString> availableActorNames;
 
 		foreach (const KPlugin *plugin, actorPlugins) {
-			ActorInterface *actor = qobject_cast<ActorInterface *>(plugin);
+			const ActorInterface *actor = qobject_cast<const ActorInterface *>(plugin);
 			if (actor && !actor->localizedModuleName(QLocale::Russian).startsWith("_")) {
 				availableActorNames.push_back(Shared::actorCanonicalName(actor->localizedModuleName(QLocale::Russian)));
 			}
@@ -409,7 +410,7 @@ void EditorInstance::updateInsertMenu()
 		int groupNo = m->showInLastBlock ? 1 : 0;
 		groups[groupNo].append(m);
 	}
-	qSort(groups[1]);
+	std::sort(groups[1].begin(), groups[1].end());
 	for (int z = 0; z < 2; ++z) {
 		QList<QSharedPointer<Macro> > group = groups[z];
 		if (1 == z && groups[1].size() > 0) {
@@ -1237,9 +1238,9 @@ void EditorInstance::saveDocument(QIODevice *device, QString *error)
 	} else {
 		QTextStream ts(device);
 #ifdef Q_OS_WIN32
-		ts.setCodec("CP1251");
+		setTextStreamCodec(ts, "CP1251");
 #else
-		ts.setCodec("UTF-8");
+		setTextStreamCodec(ts, "UTF-8");
 		ts.setGenerateByteOrderMark(true);
 #endif
 		ts << documentContents().visibleText;

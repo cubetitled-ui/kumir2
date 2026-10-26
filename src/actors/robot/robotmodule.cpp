@@ -1,3 +1,4 @@
+#include <QRandomGenerator>
 /*
 This file is generated, but you can safely change it
 until you run "gen_actor_source.py" with "--project" flag.
@@ -27,22 +28,42 @@ You should change it corresponding to functionality.
 #include <QProcessEnvironment>
 
 static const int AnimTime = 70;
-#define MAX_COLUMNS 255
-#define MAX_ROWS 128
+#define MAX_COLUMNS 1024
+#define MAX_ROWS 1024
 
 namespace ActorRobot
 {
+RobotModule::~RobotModule()
+{
+	delete curConsoleField;
+	curConsoleField = nullptr;
+}
+
 const RobotModule *RobotModule::self = 0;
 
 RobotModule::RobotModule(ExtensionSystem::KPlugin *parent) :
-	RobotModuleBase(parent)
+	RobotModuleBase(parent),
+	m_mainWidget(nullptr),
+	m_pultWidget(nullptr),
+	field(nullptr),
+	startField(nullptr),
+	animation(true),
+	view(nullptr),
+	pressed(false),
+	inDock(false),
+	btnOK1(nullptr),
+	btnCancel1(nullptr),
+	eXSizeEdit(nullptr),
+	eYSizeEdit(nullptr),
+	NewWindow(nullptr),
+	rescentMenu(nullptr),
+	CurCellSize(0),
+	DISPLAY(false),
+	curConsoleField(nullptr),
+	currentState(Shared::PluginInterface::GS_Unlocked),
+	redrawTimer(nullptr)
 {
 	self = this;
-	inDock = false;
-	animation = true;
-	pressed = false;
-	m_mainWidget = 0;
-	m_pultWidget = 0;
 }
 
 
@@ -113,7 +134,7 @@ void RobotModule::copyFromPult(QString log)
 	// Set actor specific data (like environment)
 	// The source should be ready-to-read QIODevice like QBuffer or QFile
 	if (!DISPLAY) { //console mode
-		curConsoleField = new ConsoleField(10, 15);
+		delete curConsoleField; curConsoleField = new ConsoleField(10, 15);
 		if (curConsoleField->loadFromDataStream(source) != 0) {
 			qDebug() << "ERROR LOADING FIELD FROM STREAM ";
 		}
@@ -205,7 +226,9 @@ void RobotModule::changeGlobalState(
 	field->drawNet();
 	view->update();
 	field->update();
-	msleep(2 * AnimTime);
+	if (animation) {
+		msleep(2 * AnimTime);
+	}
 	view->update();
 	field->update();
 	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);//Redraw event fix
@@ -281,7 +304,7 @@ RobotModule::acceptableCommandLineParameters()
 	);
 	params.append(
 		ExtensionSystem::CommandLineParameter(
-			false, 255, "robotdump", tr("Robot field output file name"),
+			false, QChar(255), "robotdump", tr("Robot field output file name"),
 			QVariant::String, false
 		)
 	);
@@ -313,7 +336,7 @@ QString RobotModule::initialize(
 
 	if (!DISPLAY) {
 		qDebug() << "Robot: Console mode";
-		curConsoleField = new ConsoleField(10, 15);
+		delete curConsoleField; curConsoleField = new ConsoleField(10, 15);
 		if (!fName.isEmpty()) {
 			qDebug() << "LOAD FIELD ERR CODE:" << curConsoleField->loadFromFile(fName);
 		}
@@ -326,20 +349,20 @@ QString RobotModule::initialize(
 		createGui();
 		redrawTimer = new QTimer();
 		connect(redrawTimer, SIGNAL(timeout()), this, SLOT(getTimer()));
-		redrawTimer->start(3000);
+		redrawTimer->start(16);
 	}
 
 	if (!fName.isEmpty()) {
 		int err = LoadFromFile(fName);
 		if (err != 0) {
-			return "Error loading: '" + fName + "', code=" + err;
+			return "Error loading: '" + fName + "', code=" + QString::number(err);
 		}
 	} else if (RobotModule::robotSettings()->value("Robot/SFF").isValid()) {
 		QString sName = RobotModule::robotSettings()->
 			value("Robot/SFF").toString();
 		int err = LoadFromFile(sName);
 		if (err != 0) {
-			qDebug() << "Error loading: '" + sName + "', code=" + err;
+			qDebug() << "Error loading: '" + sName + "', code=" + QString::number(err);
 			createEmptyField(7, 7);
 		}
 	}
@@ -361,14 +384,12 @@ QString RobotModule::initialize(
 void RobotModule::runGoUp()
 {
 	if (!DISPLAY) {
-		qDebug() << "Go up";
 		if (!curConsoleField->goUp()) {
 			setError(trUtf8("Робот разбился: сверху стена!"));
 		}
 		return;
 	}
 	mutex.lock();
-	qDebug() << "Robot up";
 	QString status = "OK";
 	if (!field->stepUp()) {
 		field->setCrash(UP_CRASH);
@@ -380,10 +401,9 @@ void RobotModule::runGoUp()
 	}
 	if (animation) {
 		msleep(AnimTime);
+		msleep(QRandomGenerator::global()->generate() % 10);
 	}
-	msleep(qrand() % 10);
 	mutex.unlock();
-	// view->update();
 	return;
 }
 
@@ -391,14 +411,12 @@ void RobotModule::runGoUp()
 void RobotModule::runGoDown()
 {
 	if (!DISPLAY) {
-		qDebug() << "Go down";
 		if (!curConsoleField->goDown()) {
 			setError(trUtf8("Робот разбился: снизу стена!"));
 		}
 		return;
 	}
 	mutex.lock();
-	qDebug() << "Robot down";
 	QString status = "OK";
 	if (!field->stepDown()) {
 		setError(trUtf8("Робот разбился: снизу стена!"));
@@ -410,8 +428,8 @@ void RobotModule::runGoDown()
 	}
 	if (animation) {
 		msleep(AnimTime);
+		msleep(QRandomGenerator::global()->generate() % 10);
 	}
-	msleep(qrand() % 10);
 	mutex.unlock();
 	return;
 }
@@ -419,9 +437,6 @@ void RobotModule::runGoDown()
 
 void RobotModule::runGoLeft()
 {
-
-	qDebug() << "Robot left";
-
 	if (!DISPLAY) {
 		if (!curConsoleField->goLeft()) {
 			setError(trUtf8("Робот разбился: слева стена!"));
@@ -440,8 +455,8 @@ void RobotModule::runGoLeft()
 	}
 	if (animation) {
 		msleep(AnimTime);
+		msleep(QRandomGenerator::global()->generate() % 10);
 	}
-	msleep(qrand() % 10);
 	mutex.unlock();
 	return;
 }
@@ -470,8 +485,8 @@ void RobotModule::runGoRight()
 	}
 	if (animation) {
 		msleep(AnimTime);
+		msleep(QRandomGenerator::global()->generate() % 10);
 	}
-	msleep(qrand() % 10);
 	mutex.unlock();
 
 	return;
@@ -496,11 +511,10 @@ void RobotModule::runDoPaint()
 	if (sender() == m_pultWidget) {
 		m_pultWidget->Logger->appendText(trUtf8("закрасить"), trUtf8("закрасить"), "OK");
 	}
-	//  if(animation)
-//   {
-	view->update();
-	msleep(AnimTime);
-	//  }
+	if (animation) {
+		view->update();
+		msleep(AnimTime);
+	}
 	return;
 }
 
@@ -588,7 +602,6 @@ bool RobotModule::runIsWallAtRight()
 bool RobotModule::runIsFreeAtTop()
 {
 	if (!DISPLAY) {
-		qDebug() << "Is free U:" << !curConsoleField->isUpWall();
 		return !curConsoleField->isUpWall();
 	}
 
@@ -605,7 +618,6 @@ bool RobotModule::runIsFreeAtBottom()
 {
 
 	if (!DISPLAY) {
-		qDebug() << "Is free D:" << !curConsoleField->isDownWall();
 		return !curConsoleField->isDownWall();
 	}
 
@@ -1093,13 +1105,13 @@ void RobotModule::prepareNewWindow()
 	NewWindow->setLayout(nwl);
 	NewWindow->setWindowModality(Qt::WindowModal);
 	NewWindow->setWindowTitle(QString::fromUtf8("Новая обстановка"));
-	QLabel *lKol = new QLabel(QString::fromUtf8("Количество:"), NewWindow, 0);
+	QLabel *lKol = new QLabel(QString::fromUtf8("Количество:"), NewWindow, Qt::WindowFlags());
 	nwl->addWidget(lKol, 0, 0, 1, 2, Qt::AlignCenter);
 
-	QLabel *lXSize = new QLabel(QString::fromUtf8("Столбцов"), NewWindow, 0);
+	QLabel *lXSize = new QLabel(QString::fromUtf8("Столбцов"), NewWindow, Qt::WindowFlags());
 	nwl->addWidget(lXSize, 1, 1, 1, 1, Qt::AlignCenter);
 
-	QLabel *lYSize = new QLabel(QString::fromUtf8("Строк"), NewWindow, 0);
+	QLabel *lYSize = new QLabel(QString::fromUtf8("Строк"), NewWindow, Qt::WindowFlags());
 	nwl->addWidget(lYSize, 1, 0, 1, 1, Qt::AlignCenter);
 
 	NewWindow->setFixedSize(250, 150);
@@ -1239,7 +1251,7 @@ int RobotModule::SaveToFile(QString p_FileName)
 void RobotModule::createRescentMenu()
 {
 	QString sFiles = mySettings()->value("Robot/LastFiles").toString();
-	QStringList lFiles = sFiles.split(';', QString::SkipEmptyParts);
+	QStringList lFiles = sFiles.split(';', Qt::SkipEmptyParts);
 	qDebug() << lFiles;
 
 	rescentMenu->clear();
@@ -1378,7 +1390,7 @@ void RobotModule::updateLastFiles(QString newFile)
 	}
 
 	QString sFiles = RobotModule::robotSettings()->value("Robot/LastFiles").toString();
-	QStringList lFiles = sFiles.split(';', QString::SkipEmptyParts);
+	QStringList lFiles = sFiles.split(';', Qt::SkipEmptyParts);
 	if (!lFiles.contains(newFile)) {
 		lFiles.prepend(newFile);
 		lFiles = lFiles.mid(0, 11);

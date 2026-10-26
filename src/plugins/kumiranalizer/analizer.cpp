@@ -121,10 +121,17 @@ QString Analizer::suggestFileName() const
 	return _syntaxAnalizer->suggestFileName();
 }
 
+#if QT_VERSION >= 0x060000
+QRegularExpression Analizer::lineCommentStartLexemPattern() const
+{
+	return QRegularExpression(QString::fromLatin1("[|!]"));
+}
+#else
 QRegExp Analizer::lineCommentStartLexemPattern() const
 {
 	return QRegExp(QString::fromLatin1("[|!]"));
 }
+#endif
 
 QString Analizer::sourceText() const
 {
@@ -137,7 +144,7 @@ std::string Analizer::rawSourceData() const
 	QByteArray ba;
 	QTextStream ts(&ba);
 	ts.setGenerateByteOrderMark(true);
-	ts.setCodec("UTF-8");
+	setTextStreamCodec(ts, "UTF-8");
 	ts << s;
 	return std::string(ba.constData());
 }
@@ -353,7 +360,7 @@ void Analizer::setSourceText(const QString &text)
 		}
 	}
 	_statements.clear();
-	_sourceText = text.split("\n", QString::KeepEmptyParts);
+	_sourceText = text.split("\n", Qt::KeepEmptyParts);
 
 	QList<TextStatementPtr> preprocessorStatements;
 	_lexer->splitIntoStatements(_sourceText, 0, preprocessorStatements, QStringList());

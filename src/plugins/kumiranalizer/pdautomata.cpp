@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "pdautomata.h"
 
 #include <kumir2-libs/errormessages/errormessages.h>
@@ -310,7 +311,7 @@ void PDAutomata::loadRules(const QString &rulesRoot)
 //    QFile dbg("/home/victor/work/git/kumir2/rules.txt");
 //    dbg.open(QIODevice::WriteOnly);
 //    QTextStream ts(&dbg);
-//    ts.setCodec("UTF-8");
+//    setTextStreamCodec(ts, "UTF-8");
 //    ts << normalizedRules;
 //    dbg.close();
 
@@ -446,7 +447,7 @@ void PDAutomata::loadRules(const QString &rulesRoot)
 //    qDebug() << "fff";
 	foreach (QString key, matrix_.keys()) {
 		Rules rulesList = matrix_[key];
-		qSort(rulesList);
+		std::sort(rulesList.begin(), rulesList.end());
 		matrix_[key] = rulesList;
 	}
 //    qDebug() << "End load rules";
@@ -681,8 +682,8 @@ static std::list<QString> readRulesFile(const QString &fileName)
 		return result;
 	}
 	QTextStream ts(&f);
-	ts.setCodec("UTF-8");
-	result = ts.readAll().split("\n").toStdList();
+	setTextStreamCodec(ts, "UTF-8");
+	QStringList _ql = ts.readAll().split("\n"); result = std::list<QString>(_ql.begin(), _ql.end());
 	f.close();
 	result.remove_if(isEmptyRulesLine);
 	mergeRuleLines(result);
@@ -808,12 +809,12 @@ void prepareRules(const QStringList &files, QString &out)
 		int d = str.indexOf(':');
 		int d1 = str.lastIndexOf(':');
 		if (d != d1) {
-			qDebug() << QString::fromUtf8("Два двоеточия в строке: ") << str << endl;
+			qDebug() << QString::fromUtf8("Два двоеточия в строке: ") << str;
 			return;
 		}
 		int e = str.lastIndexOf('[');
 		if (e == -1) {
-			qDebug() << QString::fromUtf8("Не задан приоритет строки: ") << str << endl;
+			qDebug() << QString::fromUtf8("Не задан приоритет строки: ") << str;
 			return;
 		}
 		if (d != -1) {
@@ -825,7 +826,7 @@ void prepareRules(const QStringList &files, QString &out)
 		}
 		QString p(str.mid(e).trimmed());
 		if (!p.startsWith("[") && !p.endsWith("]")) {
-			qDebug() << QString::fromUtf8("Ошибка задания приоритета в строке: ") << str << endl;
+			qDebug() << QString::fromUtf8("Ошибка задания приоритета в строке: ") << str;
 			return;
 		}
 		priorities << p.mid(1, p.length() - 2).toDouble();
@@ -833,9 +834,9 @@ void prepareRules(const QStringList &files, QString &out)
 
 	QList<QStringList> pravila;
 	foreach (QString s, pravila1) {
-		pravila << s.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+		pravila << s.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 		if (!isNeterminal(pravila.last()[0]) || pravila.last()[1] != "->" || pravila.last().count() < 3) {
-			qDebug() << QString::fromUtf8("Ошибка в левой части: ") << pravila.last().join(" ") << endl;
+			qDebug() << QString::fromUtf8("Ошибка в левой части: ") << pravila.last().join(" ");
 			return;
 		}
 	}
@@ -1071,7 +1072,7 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 	filIn1.open(QIODevice::WriteOnly);
 
 	QTextStream sIn1(&filIn1);
-	sIn1.setCodec("UTF-8");
+	setTextStreamCodec(sIn1, "UTF-8");
 
 
 	int fileNum = -1;
@@ -1083,7 +1084,7 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 		filIn.open(QIODevice::ReadOnly);
 
 		QTextStream sIn(&filIn);
-		sIn.setCodec("UTF-8");
+		setTextStreamCodec(sIn, "UTF-8");
 
 
 		for (; !sIn.atEnd() ;) {
@@ -1109,7 +1110,7 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 						str += sIn.readLine();
 					} else {
 						sIn1 << "Syntax error in {}:\n";
-						sIn1 << str << endl;
+						sIn1 << str;
 						return;
 					}
 				}
@@ -1124,7 +1125,7 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 	filIn.setData(filIn1.data());
 	filIn.open(QIODevice::ReadOnly);
 	QTextStream sIn(&filIn);
-	sIn.setCodec("UTF-8");
+	setTextStreamCodec(sIn, "UTF-8");
 
 
 	QStringList pravila1;
@@ -1150,12 +1151,12 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 		int d = str.indexOf(':');
 		int d1 = str.lastIndexOf(':');
 		if (d != d1) {
-			qDebug() << QString::fromUtf8("Два двоеточия в строке: ") << str << endl;
+			qDebug() << QString::fromUtf8("Два двоеточия в строке: ") << str;
 			return;
 		}
 		int e = str.lastIndexOf('[');
 		if (e == -1) {
-			qDebug() << QString::fromUtf8("Не задан приоритет строки: ") << str << endl;
+			qDebug() << QString::fromUtf8("Не задан приоритет строки: ") << str;
 			return;
 		}
 		if (d != -1) {
@@ -1167,7 +1168,7 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 		}
 		QString p(str.mid(e).trimmed());
 		if (!p.startsWith("[") && !p.endsWith("]")) {
-			qDebug() << QString::fromUtf8("Ошибка задания приоритета в строке: ") << str << endl;
+			qDebug() << QString::fromUtf8("Ошибка задания приоритета в строке: ") << str;
 			return;
 		}
 		priorities << p.mid(1, p.length() - 2).toInt();
@@ -1175,9 +1176,9 @@ void prepareRules_By_N_M_Suboch(const QStringList &files, QString &out, const QL
 
 	QList<QStringList> pravila;
 	foreach (QString s, pravila1) {
-		pravila << s.split(QRegExp("\\s+"), QString::SkipEmptyParts);
+		pravila << s.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 		if (!isNeterminal(pravila.last()[0]) || pravila.last()[1] != "->" || pravila.last().count() < 3) {
-			qDebug() << QString::fromUtf8("Ошибка в левой части: ") << pravila.last().join(" ") << endl;
+			qDebug() << QString::fromUtf8("Ошибка в левой части: ") << pravila.last().join(" ");
 			return;
 		}
 	}

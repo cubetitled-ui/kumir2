@@ -859,24 +859,44 @@ bool IO::InputStream::readRawChar(Char &x)
 					extraBytes = 3;
 				}
 			}
-			lastCharLength_ = 1 + extraBytes;
-			currentPosition_ += lastCharLength_;
+			bool isUtfSequence = true;
 			for (int i = 0; i < extraBytes; i++) {
 				ch = fgetc(file_);
-				if ((ch >> 6) != 2) {
-					Core::abort(Core::fromUtf8("Ошибка чтения данных из файла: UTF-8 файл поврежден"));
-					return false;
+				if (ch < 0 || (ch >> 6) != 2) {
+					// Not valid UTF-8 follow byte! Unget read character and treat firstByte as single byte
+					if (ch >= 0) {
+						ungetc(ch, file_);
+					}
+					for (int j = i - 1; j >= 0; j--) {
+						ungetc((unsigned char)buf[j + 1], file_);
+					}
+					isUtfSequence = false;
+					break;
 				}
 				buf[i + 1] = ch;
 			}
+			if (isUtfSequence) {
+				lastCharLength_ = 1 + extraBytes;
+			} else {
+				lastCharLength_ = 1;
+			}
+			currentPosition_ += lastCharLength_;
 		}
 
-		std::string sb(buf);
+		std::string sb(buf, lastCharLength_);
 		EncodingError encodingError;
-		std::wstring res = Coder::decode(encoding_, sb, encodingError);
+		std::wstring res;
+		if (buf[0] == '\0' && lastCharLength_ == 1) {
+			res = std::wstring(1, L'\0');
+			encodingError = NoEncodingError;
+		} else {
+			res = Coder::decode(encoding_, sb, encodingError);
+		}
 		if (encodingError) {
-			Core::abort(Core::fromUtf8("Ошибка перекодирования при чтении данных из текстового файла"));
-			return false;
+			// Fallback for raw binary bytes: preserve exact byte value as character
+			// Map byte to standard Kumir Char via StringUtils::symbol
+			res = std::wstring(1, StringUtils::symbol(static_cast<unsigned char>(buf[0])));
+			encodingError = NoEncodingError;
 		}
 		if (res.length() != 1) {
 			Core::abort(Core::fromUtf8("Ошибка перекодирования при чтении данных из текстового файла"));

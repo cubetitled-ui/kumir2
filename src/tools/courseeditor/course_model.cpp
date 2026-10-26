@@ -147,7 +147,7 @@ int courseModel::domRow(QDomNode &child)const //TODO Check
 			return i;
 		}
 	}
-	return 0;
+	return Qt::NoItemFlags;
 }
 
 QModelIndex courseModel::parent(const QModelIndex &child) const
@@ -221,7 +221,7 @@ QDomNode courseModel::nodeById(int id, QDomNode parent) const
 Qt::ItemFlags courseModel::flags(const QModelIndex &index) const
 {
 	if (!index.isValid()) {
-		return 0;
+		return Qt::NoItemFlags;
 	}
 	// qDebug()<<"IS teacher:"<<isTeacher;
 	if (isTeacher) {

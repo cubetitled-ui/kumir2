@@ -1,3 +1,4 @@
+#include <QStandardPaths>
 //****************************************************************************
 //**
 //** Copyright (C) 2004-2014 IMPB RAS. All rights reserved.
@@ -102,7 +103,7 @@ void KumScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void KumScene::wheelEvent(QGraphicsSceneWheelEvent *wheelEvent)
 {
-	int Delta = wheelEvent->delta();
+	int Delta = wheelEventDelta(wheelEvent);
 //qWarning("wheelEvent %i",Delta);
 	emit MouseWheel(Delta);
 }
@@ -706,7 +707,7 @@ int KumKuznec::LoadFromFile(QString p_FileName)
 	qDebug() << ttt;
 	l_String = QString::fromUtf8(ttt);
 	l_String = l_String.simplified();
-	zadanie = l_String.split(" ", QString::SkipEmptyParts);
+	zadanie = l_String.split(" ", Qt::SkipEmptyParts);
 	for (int i = 0; i < zadanie.count() - 1; i++) {
 		qDebug() << "flag:" << zadanie[i];
 		flags_pos.append(zadanie[i].toInt(&ok));
@@ -1452,11 +1453,11 @@ void KumKuznec::InfoOKClick(void)
 
 void KumKuznec::CreateXYLabel(void)
 {
-	lXCur = new QLabel(QString::fromUtf8("X= "), MV, 0);
+	lXCur = new QLabel(QString::fromUtf8("X= "), MV, Qt::WindowFlags());
 	lXCur->setGeometry(QRect(ButtonSdwig + 90, 0, 80, 20));
 	lXCur->hide();
 
-	lYCur = new QLabel(QString::fromUtf8("Y= "), MV, 0);
+	lYCur = new QLabel(QString::fromUtf8("Y= "), MV, Qt::WindowFlags());
 	lYCur->setGeometry(QRect(ButtonSdwig + 90, 12, 80, 20));
 	lYCur->hide();
 //qWarning("XYYYYYYYY");

@@ -55,7 +55,7 @@ public:
 
 	QString field(QString ispName, int fieldNo)
 	{
-		QList<QString> ispFields = fields.values(ispName);
+		QList<QString> ispFields = qmapValues(fields, ispName);
 		if (fieldNo >= ispFields.count()) {
 			return "";
 		}
@@ -64,7 +64,7 @@ public:
 
 	int fieldsCount(QString ispName)
 	{
-		QList<QString> ispFields = fields.values(ispName);
+		QList<QString> ispFields = qmapValues(fields, ispName);
 
 		return ispFields.count();
 	}
@@ -91,7 +91,7 @@ public:
 	QStringList isps;
 
 	//Обстановки для каждого исполнителя fields[исп,обст]
-	QMap<QString, QString> fields;
+	QMultiMap<QString, QString> fields;
 };
 
 

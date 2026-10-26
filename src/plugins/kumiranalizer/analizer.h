@@ -87,7 +87,11 @@ public slots:
 	const AST::ModulePtr findModuleByLine(int lineNo) const;
 
 	QString suggestFileName() const;
+	#if QT_VERSION >= 0x060000
+	QRegularExpression lineCommentStartLexemPattern() const;
+#else
 	QRegExp lineCommentStartLexemPattern() const;
+#endif
 
 
 private /*typedefs*/:

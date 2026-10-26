@@ -471,7 +471,7 @@ int PainterModule::runPageWidth()
 int PainterModule::runTextWidth(const QString &text)
 {
 	const QFontMetrics fm(font);
-	return fm.width(text);
+	return fontMetricsWidth(fm, text);
 }
 
 

@@ -71,7 +71,7 @@ QList<QMenu *> Plugin::menus() const
 QStringList Plugin::getListOfCourses() const
 {
 	QString defaultCur = qApp->property("sharePath").toString() + "/courses/practicum/practicum.kurs.xml;";
-	return mySettings()->value("Courses/LastFiles", defaultCur).toString().split(";", QString::SkipEmptyParts);
+	return mySettings()->value("Courses/LastFiles", defaultCur).toString().split(";", Qt::SkipEmptyParts);
 }
 
 int Plugin::loadWorkBook(QString wbfilename, QString cbname)

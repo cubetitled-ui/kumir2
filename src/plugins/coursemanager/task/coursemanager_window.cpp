@@ -166,7 +166,7 @@ void MainWindowTask::updateLastFiles(const QString newFile)
 	if (lastFiles.indexOf(newFile) < 0) {
 		lastFiles.prepend(newFile);
 	}
-	int max_fid = std::min(lastFiles.count(), 10);
+	int max_fid = std::min(int(lastFiles.count()), 10);
 	QString sett = "";
 	for (int i = 0; i < max_fid; i++) {
 		sett += lastFiles.at(i) + ";";
@@ -960,7 +960,7 @@ QString MainWindowTask::loadTestAlg(QString file_name)
 		return "";
 	};
 	QTextStream ts(&file);
-	ts.setCodec("UTF-16LE");
+	setTextStreamCodec(ts, "UTF-16LE");
 	QString testalg = ts.readAll();
 	file.close();
 

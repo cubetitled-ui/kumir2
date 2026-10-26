@@ -35,7 +35,7 @@ void InsertCommand::redo()
 	bool hardIndents = analizer &&
 		Shared::AnalizerInterface::HardIndents == analizer->plugin()->indentsBehaviour();
 	doc->insertText(text, analizer, line, pos, blankLines, blankChars);
-	QStringList lines = text.split("\n", QString::KeepEmptyParts);
+	QStringList lines = text.split("\n", Qt::KeepEmptyParts);
 	if (lines.size() > 1) {
 		int newRow = cursor->row() + lines.size() - 1;
 		int newCol = lines.last().length();
@@ -614,14 +614,14 @@ void ToggleCommentCommand::undo()
 	}
 	if (uncommentedLines.isEmpty()) {
 		// do uncomment
-		foreach (int i, commentedLines.toList()) {
+		foreach (int i, qsetToQList(commentedLines)) {
 			QString dummy;
 			doc->removeText(dummy, analizer, i, 0, 0, 0, 2);
 		}
 	} else {
 		// do comment
 		QPair<int, int> p;
-		foreach (p, uncommentedLines.toList()) {
+		foreach (p, qsetToQList(uncommentedLines)) {
 			QString c;
 			c.fill(' ', p.second);
 			c[0] = '|';

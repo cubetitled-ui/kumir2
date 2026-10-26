@@ -66,6 +66,7 @@ class Run :
 
 public:
 	explicit Run(QObject *parent);
+	~Run();
 	std::shared_ptr<VM::KumirVM> vm;
 	bool programLoaded;
 

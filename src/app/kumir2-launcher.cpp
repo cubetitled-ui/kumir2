@@ -477,7 +477,11 @@ int main(int argc, char **argv)
 	QString gitHash = QString::fromLatin1(GIT_HASH);
 	QString gitTag = QString::fromLatin1(GIT_TAG);
 	QString gitBranch = QString::fromLatin1(GIT_BRANCH);
+#if QT_VERSION >= 0x050800
+	QDateTime gitTimeStamp = QDateTime::fromSecsSinceEpoch(QString::fromLatin1(GIT_TIMESTAMP).toLongLong());
+#else
 	QDateTime gitTimeStamp = QDateTime::fromTime_t(QString::fromLatin1(GIT_TIMESTAMP).toUInt());
+#endif
 
 	qApp->setApplicationVersion(gitTag.length() > 0 && gitTag != "unknown"
 		? gitTag : gitBranch + "/" + gitHash);
@@ -512,7 +516,7 @@ int main(int argc, char **argv)
 		if (customInfo) {
 			v += "]";
 		}
-		int tw = QFontMetrics(f).width(v);
+		int tw = fontMetricsWidth(QFontMetrics(f), v);
 		int th = QFontMetrics(f).height() * 5;
 		int x = img.width() - tw - 8;
 		int y = 8;

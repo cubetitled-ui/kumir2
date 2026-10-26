@@ -1,3 +1,4 @@
+#include <QActionGroup>
 #include "tabwidgetelement.h"
 #include "kumirprogram.h"
 #include <QToolBar>

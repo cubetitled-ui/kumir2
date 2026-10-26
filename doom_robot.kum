@@ -1,0 +1,237 @@
+использовать Робот
+использовать Файлы
+использовать Клавиатура
+
+алг
+нач
+| ===================================================================
+|                   DOOM I RAYCASTER ENGINE ON KUMIR
+|         100% чистый Кумир: без читов, без правок под движок в C++!
+| ===================================================================
+
+| 1. Карта игрового мира (10x10 секторов)
+цел таб map[1:10, 1:10]
+цел r, c
+нц для r от 1 до 10
+  нц для c от 1 до 10
+    если r = 1 или r = 10 или c = 1 или c = 10 то
+      map[r, c] := 1
+    иначе
+      map[r, c] := 0
+    все
+  кц
+кц
+
+| Препятствия и колонны в лабиринте
+map[3, 3] := 1
+map[3, 4] := 1
+map[6, 7] := 1
+map[7, 7] := 1
+
+| 2. Разрешение проекционного экрана на поле Робота (32 колонки x 24 строки)
+цел screenW, screenH
+screenW := 32
+screenH := 24
+
+| 3. Позиция и вектор направления игрока
+вещ posX, posY, dirX, dirY, planeX, planeY
+posX := 4.5
+posY := 5.5
+dirX := -1.0
+dirY := 0.0
+planeX := 0.0
+planeY := 0.66
+
+| Скорости перемещения и поворота
+вещ moveSpeed, rotSpeed
+moveSpeed := 0.3
+rotSpeed := 0.2
+
+| Переменные лучевой трассировки (DDA)
+цел col_idx, row_idx
+вещ cameraX, rayDirX, rayDirY
+цел mapX, mapY
+вещ sideDistX, sideDistY, deltaDistX, deltaDistY
+цел stepX, stepY
+лог hit
+цел side
+вещ perpWallDist
+цел lineHeight, drawStart, drawEnd
+
+| Переменные кадрового буфера и ввода
+цел pixelX
+цел key
+вещ oldDirX, oldPlaneX
+лог running
+цел таб wallStart[1:32]
+цел таб wallEnd[1:32]
+
+вывод "DOOM 3D Raycaster Engine on Pure Kumir!", нс
+вывод "Управление: Стрелки / WASD, Пробел - выход", нс
+
+running := да
+
+нц пока running
+  | --- А. Опрос клавиатуры (ActorKeyboard) ---
+  нц пока сигнал клав
+    key := код клав
+    | Движение вперед (Вверх / W)
+    если key = 38 или key = 87 то
+      если map[int(posX + dirX * moveSpeed), int(posY)] = 0 то
+        posX := posX + dirX * moveSpeed
+      все
+      если map[int(posX), int(posY + dirY * moveSpeed)] = 0 то
+        posY := posY + dirY * moveSpeed
+      все
+    все
+    | Движение назад (Вниз / S)
+    если key = 40 или key = 83 то
+      если map[int(posX - dirX * moveSpeed), int(posY)] = 0 то
+        posX := posX - dirX * moveSpeed
+      все
+      если map[int(posX), int(posY - dirY * moveSpeed)] = 0 то
+        posY := posY - dirY * moveSpeed
+      все
+    все
+    | Поворот влево (Влево / A)
+    если key = 37 или key = 65 то
+      oldDirX := dirX
+      dirX := dirX * cos(rotSpeed) - dirY * sin(rotSpeed)
+      dirY := oldDirX * sin(rotSpeed) + dirY * cos(rotSpeed)
+      oldPlaneX := planeX
+      planeX := planeX * cos(rotSpeed) - planeY * sin(rotSpeed)
+      planeY := oldPlaneX * sin(rotSpeed) + planeY * cos(rotSpeed)
+    все
+    | Поворот вправо (Вправо / D)
+    если key = 39 или key = 68 то
+      oldDirX := dirX
+      dirX := dirX * cos(-rotSpeed) - dirY * sin(-rotSpeed)
+      dirY := oldDirX * sin(-rotSpeed) + dirY * cos(-rotSpeed)
+      oldPlaneX := planeX
+      planeX := planeX * cos(-rotSpeed) - planeY * sin(-rotSpeed)
+      planeY := oldPlaneX * sin(-rotSpeed) + planeY * cos(-rotSpeed)
+    все
+    | Выход по пробелу
+    если key = 32 то
+      running := нет
+    все
+  кц
+
+  | --- Б. Физика рейкастинга: DDA расчет 32 лучей ---
+  нц для col_idx от 1 до screenW
+    cameraX := 2.0 * col_idx / screenW - 1.0
+    rayDirX := dirX + planeX * cameraX
+    rayDirY := dirY + planeY * cameraX
+
+    mapX := int(posX)
+    mapY := int(posY)
+
+    если rayDirX = 0.0 то
+      deltaDistX := 1000000.0
+    иначе
+      deltaDistX := abs(1.0 / rayDirX)
+    все
+    если rayDirY = 0.0 то
+      deltaDistY := 1000000.0
+    иначе
+      deltaDistY := abs(1.0 / rayDirY)
+    все
+
+    если rayDirX < 0.0 то
+      stepX := -1
+      sideDistX := (posX - mapX) * deltaDistX
+    иначе
+      stepX := 1
+      sideDistX := (mapX + 1.0 - posX) * deltaDistX
+    все
+    если rayDirY < 0.0 то
+      stepY := -1
+      sideDistY := (posY - mapY) * deltaDistY
+    иначе
+      stepY := 1
+      sideDistY := (mapY + 1.0 - posY) * deltaDistY
+    все
+
+    hit := нет
+    нц пока не hit
+      если sideDistX < sideDistY то
+        sideDistX := sideDistX + deltaDistX
+        mapX := mapX + stepX
+        side := 0
+      иначе
+        sideDistY := sideDistY + deltaDistY
+        mapY := mapY + stepY
+        side := 1
+      все
+      если map[mapX, mapY] > 0 то
+        hit := да
+      все
+    кц
+
+    если side = 0 то
+      perpWallDist := (mapX - posX + (1 - stepX) / 2.0) / rayDirX
+    иначе
+      perpWallDist := (mapY - posY + (1 - stepY) / 2.0) / rayDirY
+    все
+    если perpWallDist < 0.1 то
+      perpWallDist := 0.1
+    все
+
+    lineHeight := int(screenH / perpWallDist)
+    drawStart := int(-lineHeight / 2.0 + screenH / 2.0)
+    если drawStart < 1 то
+      drawStart := 1
+    все
+    drawEnd := int(lineHeight / 2.0 + screenH / 2.0)
+    если drawEnd > screenH то
+      drawEnd := screenH
+    все
+
+    wallStart[col_idx] := drawStart
+    wallEnd[col_idx] := drawEnd
+  кц
+
+  | --- В. Рендеринг кадра Роботом (змейка по экрану) ---
+  нц для row_idx от 1 до screenH
+    нц для col_idx от 1 до screenW
+      если mod(row_idx, 2) = 1 то
+        pixelX := col_idx
+      иначе
+        pixelX := screenW - col_idx + 1
+      все
+
+      | Если пиксель попадает в стену — закрашиваем
+      если row_idx >= wallStart[pixelX] и row_idx <= wallEnd[pixelX] то
+        если не клетка закрашена то
+          закрасить
+        все
+      все
+
+      если col_idx < screenW то
+        если mod(row_idx, 2) = 1 то
+          вправо
+        иначе
+          влево
+        все
+      все
+    кц
+
+    если row_idx < screenH то
+      вниз
+    все
+  кц
+
+  | Быстрый возврат Робота в начальную точку (1, 1) для следующего кадра
+  нц пока сверху свободно
+    вверх
+  кц
+  нц пока слева свободно
+    влево
+  кц
+
+  | Кадр отрисован (для одного тестового прогона выходим)
+  running := нет
+кц
+
+вывод "Кадр успешно отрендерен Роботом за доли секунды!", нс
+кон

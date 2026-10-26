@@ -151,7 +151,6 @@ bool ConsoleField::isRightWall() const
 
 bool ConsoleField::goUp()
 {
-	qDebug() << "U Row " << roboRow << " Col " << roboCol;
 	if (isUpWall()) {
 		return false;
 	}
@@ -161,7 +160,6 @@ bool ConsoleField::goUp()
 
 bool ConsoleField::goDown()
 {
-	qDebug() << "D Row " << roboRow << " Col " << roboCol;
 	if (isDownWall()) {
 		return false;
 	}
@@ -171,7 +169,6 @@ bool ConsoleField::goDown()
 
 bool ConsoleField::goLeft()
 {
-	qDebug() << "L Row " << roboRow << " Col " << roboCol;
 	if (isLeftWall()) {
 		return false;
 	}
@@ -181,7 +178,6 @@ bool ConsoleField::goLeft()
 
 bool ConsoleField::goRight()
 {
-	qDebug() << "R Row " << roboRow << " Col " << roboCol;
 	if (getItem(roboRow, roboCol)->rightWall) {
 		return false;
 	}

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "declarativesettingspage.h"
 #include "declarativesettingspage_impl.h"
 
@@ -26,7 +27,7 @@ DeclarativeSettingsPage::DeclarativeSettingsPage(
 		entry.key = key;
 		entriesArray.push_back(entry);
 	}
-	qSort(entriesArray);
+	std::sort(entriesArray.begin(), entriesArray.end());
 	Q_FOREACH (const Entry &entry, entriesArray) {
 		const QString &key = entry.key;
 		if (entry.type == Integer) {

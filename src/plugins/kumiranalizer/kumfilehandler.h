@@ -27,9 +27,9 @@ public:
         QByteArray bytesCopy(bytes);
         QTextStream stream(&bytesCopy);
         if (forceEncoding.length() > 0)
-            stream.setCodec(forceEncoding.toLatin1().constData());
+            setTextStreamCodec(stream, forceEncoding);
         else {
-            stream.setCodec("UTF-16");
+            setTextStreamCodec(stream, "UTF-16");
             stream.setAutoDetectUnicode(true);
         }
         QString string = stream.readAll();

@@ -115,13 +115,13 @@ void OvenTimer::draw(QPainter *painter)
 	static const int triangle[3][2] = {
 		{-2, -49}, {+2, -49}, {0, -47}
 	};
-	QPen thickPen(palette().foreground(), 1.5);
-	QPen thinPen(palette().foreground(), 0.5);
+	QPen thickPen(palette().windowText(), 1.5);
+	QPen thinPen(palette().windowText(), 0.5);
 	QColor niceBlue(200, 180, 130);
 	QColor sand(220, 190, 150);
 	QColor sandLight(244, 229, 111);
 	painter->setPen(thinPen);
-	painter->setBrush(palette().foreground());
+	painter->setBrush(palette().windowText());
 	painter->drawPolygon(QPolygon(3, &triangle[0][0]));
 	QConicalGradient coneGradient(0, 0, -90.0);
 	coneGradient.setColorAt(0.0, sand);
@@ -151,7 +151,7 @@ void OvenTimer::draw(QPainter *painter)
 	qDebug() << "Duration " << duration();
 	painter->setBrush(knobGradient);
 	painter->setPen(thinPen);
-	painter->drawRoundRect(-7, -25, 14, 50, 99, 49);
+	painter->drawRoundedRect(-7, -25, 14, 50, 99, 49, Qt::RelativeSize);
 
 	for (int i = 0; i <= 359; ++i) {
 		if (i % 60 == 0) {

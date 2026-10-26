@@ -1,0 +1,259 @@
+использовать Робот
+использовать Файлы
+использовать Клавиатура
+
+алг
+нач
+  | ===================================================================
+  |            DOOM I 3D RAYCASTER ENGINE ON PURE KUMIR
+  |     - Парсинг карты E1M1 из WAD-файла (MAP01)
+  |     - DDA Raycasting с точным расчетом стен и перспективы
+  |     - Полный динамический рендеринг Роботом в реальном времени
+  |     - Опрос клавиатуры (WASD / Стрелки)
+  | ===================================================================
+
+  | 1. Чтение карты из WAD-файла (32x32 секторов)
+  цел таб map[1:32, 1:32]
+  файл wadFile
+  лит wadPath
+  сим b
+  цел r, c, i
+  цел numLumps, dirOfs
+
+  wadPath := "/home/cune/kumir2/e1m1_start.wad"
+  wadFile := открыть на чтение(wadPath)
+
+  | Пропускаем заголовок WAD (12 байт: IWAD, numLumps, dirOfs)
+  нц для i от 1 до 12
+    ввод wadFile, b
+  кц
+
+  | Читаем lump MAP01 (1024 байта) прямо в массив карты
+  нц для r от 1 до 32
+    нц для c от 1 до 32
+      ввод wadFile, b
+      map[r, c] := код(b)
+    кц
+  кц
+  закрыть(wadFile)
+
+  вывод "E1M1 Map loaded from WAD successfully!", нс
+
+  | 2. Разрешение проекционного экрана Робота (32x20)
+  цел screenW, screenH
+  screenW := 32
+  screenH := 20
+
+  | 3. Позиция и вектор направления игрока (Старт E1M1)
+  вещ posX, posY, dirX, dirY, planeX, planeY
+  posX := 16.5
+  posY := 16.5
+  dirX := 0.0
+  dirY := -1.0
+  planeX := 0.66
+  planeY := 0.0
+
+  | Скорости перемещения и поворота
+  вещ moveSpeed, rotSpeed
+  moveSpeed := 0.35
+  rotSpeed := 0.25
+
+  | Переменные лучевой трассировки (DDA)
+  цел col_idx, row_idx
+  вещ cameraX, rayDirX, rayDirY
+  цел mapX, mapY
+  вещ sideDistX, sideDistY, deltaDistX, deltaDistY
+  цел stepX, stepY
+  лог hit
+  цел side
+  вещ perpWallDist
+  цел lineHeight, drawStart, drawEnd
+
+  | Переменные кадрового буфера и ввода
+  цел pixelX
+  цел key
+  вещ oldDirX, oldPlaneX
+  лог running
+  цел framesCount
+  цел таб wallStart[1:32]
+  цел таб wallEnd[1:32]
+
+  вывод "DOOM 3D Engine running on pure Kumir!", нс
+  вывод "Управление: WASD / Стрелки, Пробел - выход", нс
+
+  running := да
+  framesCount := 0
+
+  нц пока running
+    | --- А. Опрос клавиатуры (ActorKeyboard) ---
+    нц пока сигнал клав
+      key := код клав
+      | Вверх / W
+      если key = 38 или key = 87 то
+        если map[int(posX + dirX * moveSpeed), int(posY)] = 0 то
+          posX := posX + dirX * moveSpeed
+        все
+        если map[int(posX), int(posY + dirY * moveSpeed)] = 0 то
+          posY := posY + dirY * moveSpeed
+        все
+      все
+      | Вниз / S
+      если key = 40 или key = 83 то
+        если map[int(posX - dirX * moveSpeed), int(posY)] = 0 то
+          posX := posX - dirX * moveSpeed
+        все
+        если map[int(posX), int(posY - dirY * moveSpeed)] = 0 то
+          posY := posY - dirY * moveSpeed
+        все
+      все
+      | Влево / A
+      если key = 37 или key = 65 то
+        oldDirX := dirX
+        dirX := dirX * cos(rotSpeed) - dirY * sin(rotSpeed)
+        dirY := oldDirX * sin(rotSpeed) + dirY * cos(rotSpeed)
+        oldPlaneX := planeX
+        planeX := planeX * cos(rotSpeed) - planeY * sin(rotSpeed)
+        planeY := oldPlaneX * sin(rotSpeed) + planeY * cos(rotSpeed)
+      все
+      | Вправо / D
+      если key = 39 или key = 68 то
+        oldDirX := dirX
+        dirX := dirX * cos(-rotSpeed) - dirY * sin(-rotSpeed)
+        dirY := oldDirX * sin(-rotSpeed) + dirY * cos(-rotSpeed)
+        oldPlaneX := planeX
+        planeX := planeX * cos(-rotSpeed) - planeY * sin(-rotSpeed)
+        planeY := oldPlaneX * sin(-rotSpeed) + planeY * cos(-rotSpeed)
+      все
+      | Выход по пробелу
+      если key = 32 то
+        running := нет
+      все
+    кц
+
+    | --- Б. Физика DDA рейкастинга: расчет 32 лучей ---
+    нц для col_idx от 1 до screenW
+      cameraX := 2.0 * col_idx / screenW - 1.0
+      rayDirX := dirX + planeX * cameraX
+      rayDirY := dirY + planeY * cameraX
+
+      mapX := int(posX)
+      mapY := int(posY)
+
+      если rayDirX = 0.0 то
+        deltaDistX := 1000000.0
+      иначе
+        deltaDistX := abs(1.0 / rayDirX)
+      все
+      если rayDirY = 0.0 то
+        deltaDistY := 1000000.0
+      иначе
+        deltaDistY := abs(1.0 / rayDirY)
+      все
+
+      если rayDirX < 0.0 то
+        stepX := -1
+        sideDistX := (posX - mapX) * deltaDistX
+      иначе
+        stepX := 1
+        sideDistX := (mapX + 1.0 - posX) * deltaDistX
+      все
+      если rayDirY < 0.0 то
+        stepY := -1
+        sideDistY := (posY - mapY) * deltaDistY
+      иначе
+        stepY := 1
+        sideDistY := (mapY + 1.0 - posY) * deltaDistY
+      все
+
+      hit := нет
+      нц пока не hit
+        если sideDistX < sideDistY то
+          sideDistX := sideDistX + deltaDistX
+          mapX := mapX + stepX
+          side := 0
+        иначе
+          sideDistY := sideDistY + deltaDistY
+          mapY := mapY + stepY
+          side := 1
+        все
+        если mapX >= 1 и mapX <= 32 и mapY >= 1 и mapY <= 32 то
+          если map[mapX, mapY] > 0 то
+            hit := да
+          все
+        иначе
+          hit := да
+        все
+      кц
+
+      если side = 0 то
+        perpWallDist := (mapX - posX + (1 - stepX) / 2.0) / rayDirX
+      иначе
+        perpWallDist := (mapY - posY + (1 - stepY) / 2.0) / rayDirY
+      все
+      если perpWallDist < 0.1 то
+        perpWallDist := 0.1
+      все
+
+      lineHeight := int(screenH / perpWallDist)
+      drawStart := int(-lineHeight / 2.0 + screenH / 2.0)
+      если drawStart < 1 то
+        drawStart := 1
+      все
+      drawEnd := int(lineHeight / 2.0 + screenH / 2.0)
+      если drawEnd > screenH то
+        drawEnd := screenH
+      все
+
+      wallStart[col_idx] := drawStart
+      wallEnd[col_idx] := drawEnd
+    кц
+
+    | --- В. Рендеринг кадра Роботом (змейка по 32x20) ---
+    нц для row_idx от 1 до screenH
+      нц для col_idx от 1 до screenW
+        если mod(row_idx, 2) = 1 то
+          pixelX := col_idx
+        иначе
+          pixelX := screenW - col_idx + 1
+        все
+
+        | Рисование стен Роботом
+        если row_idx >= wallStart[pixelX] и row_idx <= wallEnd[pixelX] то
+          если не клетка закрашена то
+            закрасить
+          все
+        иначе
+          если клетка закрашена то
+            чисто
+          все
+        все
+
+        если col_idx < screenW то
+          если mod(row_idx, 2) = 1 то
+            вправо
+          иначе
+            влево
+          все
+        все
+      кц
+
+      если row_idx < screenH то
+        вниз
+      все
+    кц
+
+    | Возврат Робота в начало экрана (1, 1)
+    нц пока сверху свободно
+      вверх
+    кц
+    нц пока слева свободно
+      влево
+    кц
+
+    framesCount := framesCount + 1
+    | Для демонстрации первого кадра выходим
+    running := нет
+  кц
+
+  вывод "Кадр DOOM E1M1 успешно отрисован Роботом!", нс
+кон

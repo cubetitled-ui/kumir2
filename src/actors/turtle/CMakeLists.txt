@@ -1,7 +1,7 @@
 project(ActorTurtle)
 #cmake_minimum_required(VERSION 3.0)
 #find_package(Kumir2 REQUIRED)
-kumir2_use_qt(Core Gui Svg)
+kumir2_use_qt(Core Gui Widgets Svg SvgWidgets)
 
 set(SOURCES
 	turtlemodule.cpp
@@ -26,7 +26,7 @@ kumir2_wrap_ui(UI_SOURCES ${FORMS})
 kumir2_add_actor(
 	NAME        Turtle
 	SOURCES     ${SOURCES} ${MOC_SOURCES} ${UI_SOURCES}
-	LIBRARIES   ${QT_LIBRARIES}
+	LIBRARIES   ${QT_LIBRARIES} Qt6::Svg
 )
 
 add_dependencies(ActorTurtle Actor_Colorer)

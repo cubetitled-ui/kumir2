@@ -1,3 +1,8 @@
+#if QT_VERSION >= 0x060000
+#include <QRegularExpression>
+#else
+#include <QRegExp>
+#endif
 #include "pluginmanager.h"
 #include "pluginmanager_impl.h"
 #include "kplugin.h"
@@ -345,6 +350,15 @@ QDir PluginManager::findSystemResourcesDir(const QString &subdirShouldExists) co
 QList<const KPlugin *> PluginManager::loadedConstPlugins(const QByteArray &pattern) const
 {
 	QList<const KPlugin *> result;
+#if QT_VERSION >= 0x060000
+	const QRegularExpression rx(QRegularExpression::wildcardToRegularExpression(QString::fromLatin1(pattern)));
+	for (const KPlugin *p : pImpl_->objects) {
+		const PluginSpec &spec = p->pluginSpec();
+		if (pattern.length() == 0 || (pattern.length() > 0 && rx.match(spec.name).hasMatch())) {
+			result.append(p);
+		}
+	}
+#else
 	const QRegExp rx = QRegExp(pattern, Qt::CaseSensitive, QRegExp::Wildcard);
 	Q_FOREACH (const KPlugin *p, pImpl_->objects) {
 		const PluginSpec &spec = p->pluginSpec();
@@ -352,12 +366,22 @@ QList<const KPlugin *> PluginManager::loadedConstPlugins(const QByteArray &patte
 			result.append(p);
 		}
 	}
+#endif
 	return result;
 }
 
 QList<KPlugin *> PluginManager::loadedPlugins(const QByteArray &pattern)
 {
 	QList<KPlugin *> result;
+#if QT_VERSION >= 0x060000
+	const QRegularExpression rx(QRegularExpression::wildcardToRegularExpression(QString::fromLatin1(pattern)));
+	for (KPlugin *p : pImpl_->objects) {
+		const PluginSpec &spec = p->pluginSpec();
+		if (pattern.length() == 0 || (pattern.length() > 0 && rx.match(spec.name).hasMatch())) {
+			result.append(p);
+		}
+	}
+#else
 	const QRegExp rx = QRegExp(pattern, Qt::CaseSensitive, QRegExp::Wildcard);
 	Q_FOREACH (KPlugin *p, pImpl_->objects) {
 		const PluginSpec &spec = p->pluginSpec();
@@ -365,6 +389,7 @@ QList<KPlugin *> PluginManager::loadedPlugins(const QByteArray &pattern)
 			result.append(p);
 		}
 	}
+#endif
 	return result;
 }
 

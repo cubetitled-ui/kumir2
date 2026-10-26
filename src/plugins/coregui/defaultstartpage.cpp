@@ -253,13 +253,13 @@ QString CoreGUI::DefaultStartPage::makeShortText(const QString &s, const int max
 	static const int Margins = 30;
 	const int availableWidth = maxWidth - Margins;
 	QString ss = s;
-	int w = fm.width(ss);
+	int w = fontMetricsWidth(fm, ss);
 	if (w <= availableWidth) {
 		return ss;
 	}
 	while (ss.length() > 0) {
 		ss.remove(ss.length() - 1, 1);
-		w = fm.width(ss + "...");
+		w = fontMetricsWidth(fm, ss + "...");
 		if (w <= availableWidth) {
 			break;
 		}

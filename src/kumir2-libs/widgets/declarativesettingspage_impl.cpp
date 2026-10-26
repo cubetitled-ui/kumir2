@@ -340,6 +340,16 @@ void DeclarativeSettingsPageImpl::setButtonColor(QToolButton *btn, const QColor 
 QColor DeclarativeSettingsPageImpl::buttonColor(const QToolButton *b)
 {
 	QString style = b->styleSheet();
+#if QT_VERSION >= 0x060000
+	static const QRegularExpression rxBgColor("background-color:\\s*(\\S+)");
+	QRegularExpressionMatch m = rxBgColor.match(style);
+	if (m.hasMatch()) {
+		QString color = m.captured(1);
+		return QColor(color);
+	} else {
+		return QColor(Qt::black);
+	}
+#else
 	QRegExp rxBgColor("background-color:\\s*(\\S+)");
 	if (rxBgColor.indexIn(style) != -1) {
 		QString color = rxBgColor.cap(1);
@@ -347,6 +357,7 @@ QColor DeclarativeSettingsPageImpl::buttonColor(const QToolButton *b)
 	} else {
 		return QColor(Qt::black);
 	}
+#endif
 }
 
 

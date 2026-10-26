@@ -236,7 +236,7 @@ void TextCursor::normalizePlainText(QString &s)
 	}
 
 	// 2. Replace leading indents
-	QStringList lines = s.split('\n', QString::KeepEmptyParts);
+	QStringList lines = s.split('\n', Qt::KeepEmptyParts);
 	const int textLength = s.length();
 	s.clear();
 	s.reserve(textLength);
@@ -434,14 +434,24 @@ void TextCursor::evaluateCommand(const KeyCommand &command)
 				}
 				if (removeLeadingSpaces) {
 					QRegExp rxLeadingSpaces("^\\s+");
+#if QT_VERSION >= 0x060000
+					QRegularExpression rxLineComment = editor_->analizer()->helper()
+						? editor_->analizer()->helper()->lineCommentStartLexemPattern()
+						: QRegularExpression();
+#else
 					QRegExp rxLineComment = editor_->analizer()->helper()
 						? editor_->analizer()->helper()->lineCommentStartLexemPattern()
 						: QRegExp();
-					QStringList lines = textToInsert.split("\n", QString::KeepEmptyParts);
+#endif
+					QStringList lines = textToInsert.split("\n", Qt::KeepEmptyParts);
 					for (int i = 0; i < lines.size(); i++) {
 						QString &line = lines[i];
 						if (0 == rxLeadingSpaces.indexIn(line)) {
+#if QT_VERSION >= 0x060000
+							const int commentPos = line.indexOf(rxLineComment);
+#else
 							const int commentPos = rxLineComment.indexIn(line);
+#endif
 							const int leadingSpacesCount = rxLeadingSpaces.cap().length();
 							if (commentPos != leadingSpacesCount) {
 								line = line.mid(leadingSpacesCount);
@@ -489,7 +499,7 @@ void TextCursor::evaluateCommand(const KeyCommand &command)
 			// Ask for a compiler
 			if (append.first.length() > 0) {
 				// If found suggesstion
-				const QStringList extraLines = append.first.split('\n', QString::KeepEmptyParts);
+				const QStringList extraLines = append.first.split('\n', Qt::KeepEmptyParts);
 				for (int i = 0; i < extraLines.size(); i++) {
 					// insert closing bracket text lines
 					QString line = extraLines[i];
@@ -531,13 +541,27 @@ void TextCursor::evaluateCommand(const KeyCommand &command)
 						lastLexem = prevLine.highlight[--i];
 					}
 					if (Shared::LxTypeComment == lastLexem) {
+#if QT_VERSION >= 0x060000
+						QRegularExpression commentSymbolPattern =
+							editor_->analizerInstance_->helper()->lineCommentStartLexemPattern();
+#else
 						QRegExp commentSymbolPattern =
 							editor_->analizerInstance_->helper()->lineCommentStartLexemPattern();
+#endif
+#if QT_VERSION >= 0x060000
+						QRegularExpressionMatch _rem = commentSymbolPattern.match(prevLine.text);
+						const int commentPos = _rem.capturedStart();
+						const int prevIndent = 2 * editor_->document()->indentAt(prevRow);
+						const int prevTextPos = prevCol - prevIndent;
+						if (-1 != commentPos && prevTextPos >= commentPos) {
+							const QString commentLexem = _rem.captured();
+#else
 						const int commentPos = commentSymbolPattern.indexIn(prevLine.text);
 						const int prevIndent = 2 * editor_->document()->indentAt(prevRow);
 						const int prevTextPos = prevCol - prevIndent;
 						if (-1 != commentPos && prevTextPos >= commentPos) {
 							const QString commentLexem = commentSymbolPattern.cap();
+#endif
 							QString textToInsert = QString(" ").repeated(commentPos) + commentLexem + " ";
 							evaluateCommand(KeyCommand(KeyCommand::InsertText, textToInsert));
 							editor_->document()->checkForCompilationRequest(QPoint(column(), row()));

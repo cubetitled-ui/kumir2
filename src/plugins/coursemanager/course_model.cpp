@@ -97,7 +97,7 @@ int courseModel::loadCourse(QString file, bool cmode)
 	int eline, ecol;
 	QString taskData;
 	QTextStream ts(&f);
-	ts.setCodec("UTF-8");
+	setTextStreamCodec(ts, "UTF-8");
 	taskData.append(ts.readAll());
 	qDebug() << "Cource len in symbols:", taskData.length();
 	if (!courceXml.setContent(taskData, true, &error, &eline, &ecol)) {
@@ -234,7 +234,7 @@ int courseModel::domRow(QDomNode &child) const //TODO Check
 			return i;
 		}
 	}
-	return 0;
+	return Qt::NoItemFlags;
 }
 
 QModelIndex courseModel::parent(const QModelIndex &child) const
@@ -325,7 +325,7 @@ QDomNode courseModel::nodeById(int id, const QDomNode &parent) const
 Qt::ItemFlags courseModel::flags(const QModelIndex &index) const
 {
 	if (!index.isValid()) {
-		return 0;
+		return Qt::NoItemFlags;
 	}
 	// qDebug()<<"IS teacher:"<<isTeacher;
 	if (isTeacher) {

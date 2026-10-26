@@ -5,7 +5,8 @@
 #include "paintermodule.h"
 
 #include <QtCore/qmath.h>
-#include <QDesktopWidget>
+#include <QScreen>
+#include <QGuiApplication>
 #include <QAction>
 #include <QScrollBar>
 #include <QFileDialog>
@@ -47,7 +48,7 @@ PainterWindow::PainterWindow(PainterModule *module, QWidget *parent) :
 	ExtensionSystem::SettingsPtr s = m_module->mySettings();
 	restoreGeometry(s->value("WindowGeometry").toByteArray());
 	qreal initialZoom = 1.0;
-	QRect screenRect = qApp->desktop()->availableGeometry();
+	QRect screenRect = QGuiApplication::primaryScreen()->availableGeometry();
 	if (screenRect.height() < 700) {
 		initialZoom = 0.5;
 	}
@@ -86,7 +87,9 @@ PainterWindow::PainterWindow(PainterModule *module, QWidget *parent) :
 	ui->zoomLabel->setText(QString::number(int(ui->view->zoom() * 100)) + "%");
 	static const QString resourcesRoot = m_module->myResourcesDir().absolutePath();
 	QSettings templates(QDir(resourcesRoot).absoluteFilePath("templates.ini"), QSettings::IniFormat);
+#if QT_VERSION < 0x060000
 	templates.setIniCodec("UTF-8");
+#endif
 	const QString defName = templates.value("Names/default.png", "new page").toString();
 	updateWindowTitle("", defName);
 }

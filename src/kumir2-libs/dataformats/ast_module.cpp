@@ -78,9 +78,10 @@ bool Module::isEnabledFor(const ModulePtr currentModule) const
 		}
 		if (header.type == ModTypeExternal) {
 			foreach (AST::ModuleWPtr reference, header.usedBy) {
+				AST::ModulePtr refLock = reference.toStrongRef();
 				bool usedByUserMainModule =
-					reference &&
-					reference.data()->header.type == ModTypeUserMain;
+					refLock &&
+					refLock->header.type == ModTypeUserMain;
 				if (usedByUserMainModule) {
 					return true;
 				}
@@ -91,7 +92,8 @@ bool Module::isEnabledFor(const ModulePtr currentModule) const
 	bool enabled = currentModule.data() == this;
 	if (!enabled) {
 		foreach (AST::ModuleWPtr reference, header.usedBy) {
-			if (reference && currentModule && reference.data() == currentModule.data()) {
+			AST::ModulePtr refLock = reference.toStrongRef();
+			if (refLock && currentModule && refLock.data() == currentModule.data()) {
 				enabled = true;
 				break;
 			}

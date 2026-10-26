@@ -15,8 +15,10 @@ Settings::Settings(const QString & pluginName) :
 	pluginName_(pluginName),
 	mutex_(new QMutex)
 {
-#if QT_VERSION >= 0x050000
-	static const QString DataLocation = QStandardPaths::standardLocations(QStandardPaths::DataLocation).at(0);
+#if QT_VERSION >= 0x060000
+	static const QString DataLocation = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).isEmpty() ? QString() : QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
+#elif QT_VERSION >= 0x050000
+	static const QString DataLocation = QStandardPaths::standardLocations(QStandardPaths::DataLocation).isEmpty() ? QString() : QStandardPaths::standardLocations(QStandardPaths::DataLocation).at(0);
 #else
 	static const QString DataLocation = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
 #endif
@@ -31,7 +33,9 @@ Settings::Settings(const QString & pluginName) :
 	QSettings *sett = new QSettings(scope, pluginName);
 #endif
 	qsettings_.reset(sett);
+#if QT_VERSION < 0x060000
 	qsettings_->setIniCodec("UTF-8");
+#endif
 	settingsFile_ = qsettings_->fileName();
 }
 
@@ -79,7 +83,9 @@ void Settings::changeWorkingDirectory(const QString &workDirPath)
 	const QString settingsFileName =
 			workDirPath + "/.settings/" + pluginName_ + ".conf";
 	QSettings * sett = new QSettings(settingsFileName, QSettings::IniFormat);
+#if QT_VERSION < 0x060000
 	sett->setIniCodec("UTF-8");
+#endif
 
 	qsettings_.reset(sett);
 	settingsFile_ = qsettings_->fileName();
