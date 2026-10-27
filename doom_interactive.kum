@@ -52,58 +52,70 @@
 
   | Скорости перемещения и поворота
   вещ moveSpeed, rotSpeed
-  moveSpeed := 0.35
-  rotSpeed := 0.25
+  moveSpeed := 0.4
+  rotSpeed := 0.1
 
-  | Переменные лучевой трассировки (DDA)
-  цел col_idx, row_idx
-  вещ cameraX, rayDirX, rayDirY
-  цел mapX, mapY
-  вещ sideDistX, sideDistY, deltaDistX, deltaDistY
-  цел stepX, stepY
-  лог hit
-  цел side
-  вещ perpWallDist
-  цел lineHeight, drawStart, drawEnd
-
-  | Переменные кадрового буфера и ввода
-  цел pixelX
-  цел key
-  вещ oldDirX, oldPlaneX
-  лог running
-  лог moved
-  цел frameCount
+  | Буферы проекции столбцов стен
   цел таб wallStart[1:32]
   цел таб wallEnd[1:32]
 
-  вывод "DOOM 3D Real-Time Engine Active!", нс
-  вывод "Управление: WASD / Стрелки, Пробел - выход", нс
+  | Переменные DDA
+  цел col_idx, row_idx, pixelX, mapX, mapY, stepX, stepY, side
+  вещ cameraX, rayDirX, rayDirY, deltaDistX, deltaDistY, sideDistX, sideDistY, perpWallDist
+  цел lineHeight, drawStart, drawEnd
+  лог hit
+
+  | Переменные управления
+  лог running, moved
+  цел key, frameCount
+  вещ oldDirX, oldPlaneX
+  вещ nextX, nextY
+  цел checkX, checkY
 
   running := да
   moved := да
   frameCount := 0
 
+  вывод "DOOM 3D Real-Time Engine Active!", нс
+  вывод "Управление: WASD / Стрелки, Пробел - выход", нс
+
+  | ================= ОСНОВНОЙ ИГРОВОЙ ЦИКЛ =================
   нц пока running
-    | --- А. Опрос клавиатуры (ActorKeyboard) ---
+    | --- А. Обработка ввода с клавиатуры ---
     нц пока сигнал клав
       key := код клав
-      | Вверх / W
+
+      | Вперед / W
       если key = 38 или key = 87 то
-        если map[int(posY + dirY * moveSpeed), int(posX + dirX * moveSpeed)] = 0 то
-          posX := posX + dirX * moveSpeed
-          posY := posY + dirY * moveSpeed
-          moved := да
+        nextX := posX + dirX * moveSpeed
+        nextY := posY + dirY * moveSpeed
+        checkX := int(nextX)
+        checkY := int(nextY)
+        если checkX >= 1 и checkX <= 32 и checkY >= 1 и checkY <= 32 то
+          если map[checkY, checkX] = 0 то
+            posX := nextX
+            posY := nextY
+            moved := да
+          все
         все
       все
-      | Вниз / S
+
+      | Назад / S
       если key = 40 или key = 83 то
-        если map[int(posY - dirY * moveSpeed), int(posX - dirX * moveSpeed)] = 0 то
-          posX := posX - dirX * moveSpeed
-          posY := posY - dirY * moveSpeed
-          moved := да
+        nextX := posX - dirX * moveSpeed
+        nextY := posY - dirY * moveSpeed
+        checkX := int(nextX)
+        checkY := int(nextY)
+        если checkX >= 1 и checkX <= 32 и checkY >= 1 и checkY <= 32 то
+          если map[checkY, checkX] = 0 то
+            posX := nextX
+            posY := nextY
+            moved := да
+          все
         все
       все
-      | Влево / A
+
+      | Поворот влево / A
       если key = 37 или key = 65 то
         oldDirX := dirX
         dirX := dirX * cos(-rotSpeed) - dirY * sin(-rotSpeed)
@@ -113,7 +125,8 @@
         planeY := oldPlaneX * sin(-rotSpeed) + planeY * cos(-rotSpeed)
         moved := да
       все
-      | Вправо / D
+
+      | Поворот вправо / D
       если key = 39 или key = 68 то
         oldDirX := dirX
         dirX := dirX * cos(rotSpeed) - dirY * sin(rotSpeed)
@@ -123,13 +136,14 @@
         planeY := oldPlaneX * sin(rotSpeed) + planeY * cos(rotSpeed)
         moved := да
       все
+
       | Выход по пробелу
       если key = 32 то
         running := нет
       все
     кц
 
-    | --- Б. Физика DDA рейкастинга: расчет лучей ---
+    | --- Б. Физика DDA рейкастинга (проекция геометрии DOOM) ---
     если moved то
       нц для col_idx от 1 до screenW
         cameraX := 2.0 * col_idx / screenW - 1.0
@@ -139,12 +153,14 @@
         mapX := int(posX)
         mapY := int(posY)
 
-        если rayDirX = 0.0 то
+        | Защита от деления на ноль при строго ортогональных лучах
+        если abs(rayDirX) < 0.00001 то
           deltaDistX := 1000000.0
         иначе
           deltaDistX := abs(1.0 / rayDirX)
         все
-        если rayDirY = 0.0 то
+
+        если abs(rayDirY) < 0.00001 то
           deltaDistY := 1000000.0
         иначе
           deltaDistY := abs(1.0 / rayDirY)
@@ -157,6 +173,7 @@
           stepX := 1
           sideDistX := (mapX + 1.0 - posX) * deltaDistX
         все
+
         если rayDirY < 0.0 то
           stepY := -1
           sideDistY := (posY - mapY) * deltaDistY
@@ -165,6 +182,7 @@
           sideDistY := (mapY + 1.0 - posY) * deltaDistY
         все
 
+        | Пошаговое продвижение луча до первого препятствия
         hit := нет
         нц пока не hit
           если sideDistX < sideDistY то
@@ -176,6 +194,7 @@
             mapY := mapY + stepY
             side := 1
           все
+
           если mapX >= 1 и mapX <= 32 и mapY >= 1 и mapY <= 32 то
             если map[mapY, mapX] > 0 то
               hit := да
@@ -185,11 +204,21 @@
           все
         кц
 
+        | Расчет перпендикулярной дистанции с гарантированной защитой от деления на ноль
         если side = 0 то
-          perpWallDist := (mapX - posX + (1 - stepX) / 2.0) / rayDirX
+          если abs(rayDirX) < 0.00001 то
+            perpWallDist := 1000.0
+          иначе
+            perpWallDist := (mapX - posX + (1 - stepX) / 2.0) / rayDirX
+          все
         иначе
-          perpWallDist := (mapY - posY + (1 - stepY) / 2.0) / rayDirY
+          если abs(rayDirY) < 0.00001 то
+            perpWallDist := 1000.0
+          иначе
+            perpWallDist := (mapY - posY + (1 - stepY) / 2.0) / rayDirY
+          все
         все
+
         если perpWallDist < 0.1 то
           perpWallDist := 0.1
         все
